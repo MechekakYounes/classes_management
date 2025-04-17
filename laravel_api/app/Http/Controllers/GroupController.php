@@ -9,11 +9,15 @@ class GroupController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * $groups = Group::where('class_id', $classId)->get();
+     *  return response()->json(['data' => $groups]);
      */
     public function index()
-    {
-        $groups = Group::all();
-        return response()->json($groups);
+    {   
+        $groups = Group::where('class_id', $classId)->get();
+        return response()->json(['data' => $groups]);
+        //$groups = Group::all();
+        //return response()->json($groups);
     }
 
     /**
@@ -21,7 +25,18 @@ class GroupController extends Controller
      */
     public function create()
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
+        ]);
+        
+        $group = new Group();
+        $group->name = $validatedData['name'];
+        $group->type = $validatedData['type'];
+        $group->class_id = $classId;
+        $group->save();
+        
+        return response()->json(['data' => $group], 201);
     }
 
     /**
@@ -44,8 +59,11 @@ class GroupController extends Controller
      */
     public function show(string $id)
     {
-        $group = Group::findorFail($id);
+        $group = Group::where('class_id', $classId)
+                      ->where('id', $groupId)
+                      ->firstOrFail();
         
+        return response()->json(['data' => $group]); 
     }
 
     /**
@@ -53,7 +71,18 @@ class GroupController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'string|max:255',
+            'type' => 'string|max:255',
+        ]);
+        
+        $group = Group::where('class_id', $classId)
+                      ->where('id', $groupId)
+                      ->firstOrFail();
+                      
+        $group->update($validatedData);
+        
+        return response()->json(['data' => $group]);
     }
 
     /**
@@ -61,7 +90,19 @@ class GroupController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        
+        $validatedData = $request->validate([
+            'name' => 'string|max:255',
+            'type' => 'string|max:255',
+        ]);
+        
+        $group = Group::where('class_id', $classId)
+                      ->where('id', $groupId)
+                      ->firstOrFail();
+                      
+        $group->update($validatedData);
+        
+        return response()->json(['data' => $group]);
     }
 
     /**
@@ -69,6 +110,17 @@ class GroupController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $group = Group::where('class_id', $classId)
+                      ->where('id', $groupId)
+                      ->firstOrFail();
+        $group->delete();
+        
+        return response()->json(null, 204);
+    }
+    
+    public function allGroups() 
+    {
+        $groups = Group::all();
+        return response()->json(['data' => $groups]);
     }
 }
