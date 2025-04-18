@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'add_edit_diag.dart';
@@ -239,7 +241,7 @@ class _ClassDashboardState extends State<ClassDashboard> {
               icon: Icon(Icons.dashboard), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Groups'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.person_add), label: 'Profile'),
+              icon: Icon(Icons.account_circle), label: 'Profile'),
         ],
       ),
     );

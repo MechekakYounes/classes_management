@@ -1,15 +1,18 @@
+// ignore_for_file: library_private_types_in_public_api, prefer_const_constructors, use_build_context_synchronously, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:project_gp/add_edit_diag.dart';
-import 'api_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:project_gp/api_service.dart';
 
 void main() {
-  runApp(ClassManagerApp());
+  runApp(const ClassManagerApp());
 }
 
 class ClassManagerApp extends StatelessWidget {
+  const ClassManagerApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,21 +21,19 @@ class ClassManagerApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         textTheme: GoogleFonts.poppinsTextTheme(),
-        scaffoldBackgroundColor: const Color(0xFFE0F7FA), // background
+        scaffoldBackgroundColor: const Color(0xFFE0F7FA),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
         appBarTheme: AppBarTheme(
-          toolbarHeight: 65, // increased height here
-
+          toolbarHeight: 65,
           backgroundColor: Colors.cyan,
           elevation: 1,
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: const IconThemeData(color: Colors.white),
           titleTextStyle: GoogleFonts.poppins(
             fontSize: 27,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.cyan.shade600,
@@ -47,6 +48,8 @@ class ClassManagerApp extends StatelessWidget {
 }
 
 class MainTabController extends StatefulWidget {
+  const MainTabController({super.key});
+
   @override
   _MainTabControllerState createState() => _MainTabControllerState();
 }
@@ -56,7 +59,7 @@ class _MainTabControllerState extends State<MainTabController> {
 
   final List<Widget> _screens = [
     DashboardScreen(),
-    studentScreen(),
+    GroupScreen(),
     ProfileScreen(),
   ];
 
@@ -70,23 +73,21 @@ class _MainTabControllerState extends State<MainTabController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         transitionBuilder: (child, animation) {
           return FadeTransition(opacity: animation, child: child);
         },
         child: _screens[_selectedIndex],
       ),
-      bottomNavigationBar: Container(
-        height: 100,
+      bottomNavigationBar: SizedBox(
+        height: 120,
         child: Stack(
           children: [
-            // Wave background
             Positioned.fill(
               child: CustomPaint(
                 painter: WavePainter(),
               ),
             ),
-            // Bottom nav bar icons centered in wave
             Align(
               alignment: Alignment.center,
               child: BottomNavigationBar(
@@ -102,12 +103,21 @@ class _MainTabControllerState extends State<MainTabController> {
                     label: 'Dashboard',
                   ),
                   const BottomNavigationBarItem(
-                    icon: Icon(FontAwesomeIcons.person),
-                    label: 'student',
+                    icon: Icon(Icons.group),
+                    label: 'Groups',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(FontAwesomeIcons.gear),
-                    label: 'setting',
+                    icon: Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: SvgPicture.asset(
+                        'assets/icons/plus.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter:
+                            const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                      ),
+                    ),
+                    label: 'Profile',
                   ),
                 ],
               ),
@@ -119,7 +129,6 @@ class _MainTabControllerState extends State<MainTabController> {
   }
 }
 
-/// Custom wave painter for background
 class WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -128,13 +137,9 @@ class WavePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     Path path = Path();
-    path.moveTo(0, 10);
-
-// Gentle wave with moderate curvature
-    path.quadraticBezierTo(size.width / 4, 0, size.width / 2, 12);
-    path.quadraticBezierTo(size.width * 3 / 4, 24, size.width, 10);
-
-// Close the shape
+    path.moveTo(0, 20);
+    path.quadraticBezierTo(size.width / 4, 0, size.width / 2, 20);
+    path.quadraticBezierTo(size.width * 3 / 4, 40, size.width, 20);
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
     path.close();
@@ -147,6 +152,8 @@ class WavePainter extends CustomPainter {
 }
 
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
@@ -154,22 +161,20 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _sortBy = '';
-  String _specialty = '';
+  String _speciality = '';
   String _year = '';
   bool isLoading = true;
   String? error;
 
   List<dynamic> classes = [];
-
   List<dynamic> _filteredClasses = [];
 
   @override
   void initState() {
     super.initState();
     _refreshClasses();
-    _filteredClasses = List.from(classes);
     _searchController.addListener(() {
-      setState(() {}); // So suffixIcon updates reactively
+      setState(() {});
     });
   }
 
@@ -181,11 +186,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     try {
       classes = await ApiService.getClasses();
-      // Debug: Print number of classes fetched
-      print('Fetched ${classes.length} classes.');
+      _filteredClasses = List.from(classes);
     } catch (e) {
       error = e.toString();
-      print('Error fetching classes: $error');
     }
 
     setState(() {
@@ -193,35 +196,93 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _showAddEditDialog([Map<String, dynamic>? classToEdit]) {
+  void _confirmDelete(int id) {
     showDialog(
       context: context,
-      builder: (context) => AddEditClassDialog(
-        classToEdit: classToEdit,
-        onSave: (data) async {
-          if (classToEdit != null) {
-            await ApiService.updateClass(classToEdit['id'], data);
-          } else {
-            await ApiService.createClass(data);
-          }
-          _refreshClasses();
-        },
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Deletion'),
+        content: const Text('Are you sure you want to delete this class?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ApiService.deleteClass(id);
+              _refreshClasses();
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
 
-  void _applyFiltersclass() {
+  void _showEditClassDialog(Map<String, dynamic> classToEdit) {
+    final nameController = TextEditingController(text: classToEdit['name']);
+    final specialityController = TextEditingController(text: classToEdit['speciality']);
+    final levelController = TextEditingController(text: classToEdit['level']);
+    final semesterController = TextEditingController(text: classToEdit['semester'] ?? '');
+    final yearController = TextEditingController(text: classToEdit['year']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Edit Class', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildTextField(nameController, 'Class Name'),
+                _buildTextField(specialityController, 'Speciality'),
+                _buildTextField(levelController, 'Level'),
+                _buildTextField(semesterController, 'Semester'),
+                _buildTextField(yearController, 'Year'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            ElevatedButton(
+              child: const Text('Update'),
+              onPressed: () async {
+                Map<String, dynamic> updatedData = {
+                  'name': nameController.text,
+                  'speciality': specialityController.text,
+                  'level': levelController.text,
+                  'semester': semesterController.text,
+                  'year': yearController.text,
+                };
+                
+                await ApiService.updateClass(classToEdit['id'], updatedData);
+                _refreshClasses();
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _applyFilters() {
     List<dynamic> temp = classes.where((cls) {
-      final matchesSpecialty =
-          _specialty.isEmpty || cls['specialty'] == _specialty;
+      final matchesSpeciality = _speciality.isEmpty || cls['speciality'] == _speciality;
       final matchesYear = _year.isEmpty || cls['year'] == _year;
-      return matchesSpecialty && matchesYear;
+      return matchesSpeciality && matchesYear;
     }).toList();
 
     if (_sortBy == 'name') {
-      temp.sort((a, b) => a['name']!.compareTo(b['name']!));
+      temp.sort((a, b) => a['name'].compareTo(b['name']));
     } else if (_sortBy == 'time') {
-      temp.sort((a, b) => a['time']!.compareTo(b['time']!));
+      temp.sort((a, b) => a['created_at'] != null && b['created_at'] != null 
+          ? a['created_at'].compareTo(b['created_at']) 
+          : 0);
     }
 
     setState(() {
@@ -240,22 +301,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) {
         String tempSortBy = _sortBy;
-        String tempSpecialty = _specialty;
+        String tempSpeciality = _speciality;
         String tempYear = _year;
 
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: Text('Filter Options',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text('Filter Options', style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Sort by'),
+                decoration: const InputDecoration(labelText: 'Sort by'),
                 value: tempSortBy.isEmpty ? null : tempSortBy,
-                items: [
+                items: const [
                   DropdownMenuItem(value: '', child: Text('None')),
                   DropdownMenuItem(value: 'name', child: Text('Name')),
                   DropdownMenuItem(value: 'time', child: Text('Time Added')),
@@ -263,20 +323,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onChanged: (value) => tempSortBy = value ?? '',
               ),
               DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Specialty'),
-                value: tempSpecialty.isEmpty ? null : tempSpecialty,
-                items: [
+                decoration: const InputDecoration(labelText: 'Speciality'),
+                value: tempSpeciality.isEmpty ? null : tempSpeciality,
+                items: const [
                   DropdownMenuItem(value: '', child: Text('None')),
                   DropdownMenuItem(value: 'CS', child: Text('CS')),
                   DropdownMenuItem(value: 'ST', child: Text('ST')),
                   DropdownMenuItem(value: 'AI', child: Text('AI')),
                 ],
-                onChanged: (value) => tempSpecialty = value ?? '',
+                onChanged: (value) => tempSpeciality = value ?? '',
               ),
               DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Year'),
+                decoration: const InputDecoration(labelText: 'Year'),
                 value: tempYear.isEmpty ? null : tempYear,
-                items: [
+                items: const [
                   DropdownMenuItem(value: '', child: Text('None')),
                   DropdownMenuItem(value: '2023', child: Text('2023')),
                   DropdownMenuItem(value: '2024', child: Text('2024')),
@@ -288,18 +348,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+                onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () {
                 setState(() {
                   _sortBy = tempSortBy;
-                  _specialty = tempSpecialty;
+                  _speciality = tempSpeciality;
                   _year = tempYear;
                 });
-                _applyFiltersclass();
+                _applyFilters();
                 Navigator.pop(context);
               },
-              child: Text('Apply'),
+              child: const Text('Apply'),
             ),
           ],
         );
@@ -311,7 +371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final lowerQuery = query.toLowerCase();
     setState(() {
       _filteredClasses = classes.where((cls) {
-        return cls['name']!.toLowerCase().contains(lowerQuery);
+        return cls['name'].toLowerCase().contains(lowerQuery);
       }).toList();
     });
   }
@@ -320,183 +380,182 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(' Class Dashboard'),
+        title: const Text('Class Dashboard'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          children: [
-            // Search & Filter Row
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _search,
-                    decoration: InputDecoration(
-                      hintText: 'Search class...',
-                      prefixIcon: Icon(
-                        FontAwesomeIcons.search,
-                        color: Colors.cyan,
-                        size: 20,
-                      ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                FontAwesomeIcons.xmark,
-                                color: Colors.blueGrey.shade700,
-                                size: 18,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _searchController.clear();
-                                  _filteredClasses = List.from(classes);
-                                });
-                              },
-                            )
-                          : null,
-
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
-
-                      //  Hide border when not focused
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.transparent),
-                      ),
-
-                      //  Optional: show border when focused
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.cyan, width: 2),
-                      ),
-
-                      // Also hide default border
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.transparent),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Material(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      FontAwesomeIcons.sliders, // The filter icon
-                      color: Colors.cyan, // Custom color
-                      size: 20, // Icon size
-                    ),
-                    onPressed: _showFilterDialog, // Action for the filter icon
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Container(
-                width: 250, // Set the button width here
-                height: 45, // Set the button height here
-                child: ElevatedButton.icon(
-                  onPressed: _showCreateClassDialog,
-                  icon: SvgPicture.asset(
-                    'assets/icons/plus.svg',
-                    width: 20,
-                    height: 20,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    'Create New Class',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyan,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            Expanded(
-              child: _filteredClasses.isEmpty
-                  ? Center(
-                      child: Text('No matching classes found',
-                          style: TextStyle(color: Colors.grey)))
-                  : ListView.builder(
-                      itemCount: _filteredClasses.length,
-                      itemBuilder: (context, index) {
-                        final cls = _filteredClasses[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 4,
-                          child: ListTile(
-                            contentPadding: EdgeInsets.all(16),
-                            title: Text(
-                              cls['name']!,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 18),
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                'Specialty: ${cls['specialty']} | Year: ${cls['year']} | Level: ${cls['level']}',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.calendar_today,
-                                    size: 18, color: Colors.teal),
-                                SizedBox(height: 4),
-                                Text(cls['time']!,
-                                    style: TextStyle(fontSize: 12)),
-                              ],
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => GroupsScreen(
-                                    className: cls[
-                                        'name']!, // pass the class name here
-                                  ),
+      body: isLoading 
+          ? const Center(child: CircularProgressIndicator()) 
+          : error != null
+              ? Center(child: Text('Error: $error'))
+              : Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: _search,
+                              decoration: InputDecoration(
+                                hintText: 'Search class...',
+                                prefixIcon: const Icon(
+                                  FontAwesomeIcons.search,
+                                  color: Colors.cyan,
+                                  size: 20,
                                 ),
-                              );
-                            },
+                                suffixIcon: _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(
+                                          FontAwesomeIcons.xmark,
+                                          color: Colors.blueGrey.shade700,
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _searchController.clear();
+                                            _filteredClasses = List.from(classes);
+                                          });
+                                        },
+                                      )
+                                    : null,
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(color: Colors.transparent),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(color: Colors.cyan, width: 2),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(color: Colors.transparent),
+                                ),
+                              ),
+                            ),
                           ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
+                          const SizedBox(width: 10),
+                          Material(
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(
+                                FontAwesomeIcons.sliders,
+                                color: Colors.cyan,
+                                size: 20,
+                              ),
+                              onPressed: _showFilterDialog,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: SizedBox(
+                          width: 250,
+                          height: 45,
+                          child: ElevatedButton.icon(
+                            onPressed: _showCreateClassDialog,
+                            icon: SvgPicture.asset(
+                              'assets/icons/plus.svg',
+                              width: 20,
+                              height: 20,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              'Create New Class',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.cyan,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: _filteredClasses.isEmpty
+                            ? const Center(
+                                child: Text('No matching classes found',
+                                    style: TextStyle(color: Colors.grey)))
+                            : ListView.builder(
+                                itemCount: _filteredClasses.length,
+                                itemBuilder: (context, index) {
+                                  final cls = _filteredClasses[index];
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(vertical: 8),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 4,
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.all(16),
+                                      title: Text(
+                                        cls['name'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold, fontSize: 18),
+                                      ),
+                                      subtitle: Padding(
+                                        padding: const EdgeInsets.only(top: 8.0),
+                                        child: Text(
+                                          'Speciality: ${cls['speciality']} | Year: ${cls['year']} | Level: ${cls['level']}',
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(Icons.calendar_today,
+                                                  size: 18, color: Colors.teal),
+                                              const SizedBox(height: 4),
+                                              Text(cls['created_at']?.substring(0, 10) ?? '',
+                                                  style: const TextStyle(fontSize: 12)),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 10),
+                                          IconButton(
+                                            icon: const Icon(Icons.edit, color: Colors.blue),
+                                            onPressed: () => _showEditClassDialog(cls),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, color: Colors.red),
+                                            onPressed: () => _confirmDelete(cls['id']),
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () => _showEditClassDialog(cls),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
     );
   }
 
   void _showCreateClassDialog() {
-    final _nameController = TextEditingController();
-    final _specialtyController = TextEditingController();
-    final _levelController = TextEditingController();
-    final _semesterController = TextEditingController();
-    final _yearController = TextEditingController();
+    final nameController = TextEditingController();
+    final specialityController = TextEditingController();
+    final levelController = TextEditingController();
+    final semesterController = TextEditingController();
+    final yearController = TextEditingController();
 
     showDialog(
       context: context,
@@ -504,38 +563,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Create New Class',
+          title: const Text('Create New Class',
               style: TextStyle(fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: Column(
               children: [
-                _buildTextField(_nameController, 'Class Name'),
-                _buildTextField(_specialtyController, 'Specialty'),
-                _buildTextField(_levelController, 'Level'),
-                _buildTextField(_semesterController, 'Semester'),
-                _buildTextField(_yearController, 'Year'),
+                _buildTextField(nameController, 'Class Name'),
+                _buildTextField(specialityController, 'Speciality'),
+                _buildTextField(levelController, 'Level'),
+                _buildTextField(semesterController, 'Semester'),
+                _buildTextField(yearController, 'Year'),
               ],
             ),
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () => Navigator.pop(context),
             ),
             ElevatedButton(
-              child: Text('Create'),
-              onPressed: () {
-                setState(() {
-                  classes.add({
-                    'name': _nameController.text,
-                    'specialty': _specialtyController.text,
-                    'level': _levelController.text,
-                    'semester': _semesterController.text,
-                    'year': _yearController.text,
-                    'time': DateTime.now().toString().split(' ')[0],
-                  });
-                  _applyFiltersclass(); // reapply any filters
-                });
+              child: const Text('Create'),
+              onPressed: () async {
+                Map<String, dynamic> newClass = {
+                  'name': nameController.text,
+                  'speciality': specialityController.text,
+                  'level': levelController.text,
+                  'semester': semesterController.text,
+                  'year': yearController.text,
+                };
+                
+                await ApiService.createClass(newClass);
+                _refreshClasses();
                 Navigator.pop(context);
               },
             ),
@@ -559,746 +617,509 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////GROUP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class GroupsScreen extends StatefulWidget {
-  final String className;
-
-  const GroupsScreen({required this.className});
+class GroupScreen extends StatefulWidget {
+  const GroupScreen({super.key});
 
   @override
-  _GroupsScreenState createState() => _GroupsScreenState();
+  _GroupScreenState createState() => _GroupScreenState();
 }
 
-class _GroupsScreenState extends State<GroupsScreen> {
+class _GroupScreenState extends State<GroupScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _sortBy = 'none';
-  String _groupType = 'ALL'; // Default to 'ALL' for group type filter
+  bool isLoading = true;
+  String? error;
+  int? selectedClassId;
 
-  final List<Map<String, String>> _allGroups = [
-    {"name": "Group 1", "type": "TD"},
-    {"name": "Group 2", "type": "TP"},
-    {"name": "Group 3", "type": "TD"},
-    {"name": "Group 4", "type": "TP"},
-  ];
-
-  void _onGroupTapped(String groupName) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SessionsScreen(groupName: groupName),
-      ),
-    );
-  }
-
-  List<Map<String, String>> _filteredGroups = [];
+  List<dynamic> classes = [];
+  List<dynamic> groups = [];
+  List<dynamic> _filteredGroups = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredGroups = List.from(_allGroups);
+    _loadClasses();
     _searchController.addListener(() {
-      setState(() {
-        _applyFilters();
-      });
+      setState(() {});
     });
   }
 
-  void _applyFilters() {
-    List<Map<String, String>> temp = _allGroups.where((grp) {
-      final matchesType = _groupType == 'ALL' || grp['type'] == _groupType;
-      final matchesName = _searchController.text.isEmpty ||
-          grp['name']!
-              .toLowerCase()
-              .contains(_searchController.text.toLowerCase());
-      return matchesType && matchesName;
-    }).toList();
+  Future<void> _loadClasses() async {
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
 
-    if (_sortBy == 'name') {
-      temp.sort((a, b) => a['name']!.compareTo(b['name']!));
+    try {
+      classes = await ApiService.getClasses();
+      if (classes.isNotEmpty) {
+        await _loadGroups(classes[0]['id']);
+      }
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadGroups(int classId) async {
+    setState(() {
+      isLoading = true;
+      selectedClassId = classId;
+      error = null;
+    });
+
+    try {
+      groups = await ApiService.getAllGroups();
+      // Filter groups by classId if your API doesn't support filtering
+      groups = groups.where((group) => group['class_id'] == classId).toList();
+      _filteredGroups = List.from(groups);
+    } catch (e) {
+      error = e.toString();
     }
 
     setState(() {
-      _filteredGroups = temp;
+      isLoading = false;
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    void _showFilterDialog() {
-      showDialog(
-        context: context,
-        builder: (context) {
-          String tempSortBy = _sortBy;
-          String tempGroupType = _groupType;
-
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Text(
-              'Filter Options',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Sort by',
-                    border: UnderlineInputBorder(), // 👈 line style
-                  ),
-                  value: tempSortBy == 'none' ? null : tempSortBy,
-                  items: [
-                    DropdownMenuItem(value: 'none', child: Text('None')),
-                    DropdownMenuItem(value: 'name', child: Text('Name')),
-                  ],
-                  onChanged: (value) {
-                    tempSortBy = value ?? 'none';
-                  },
-                ),
-                SizedBox(height: 15),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Group Type',
-                    border: UnderlineInputBorder(), // 👈 line style
-                  ),
-                  value: tempGroupType == 'ALL' ? null : tempGroupType,
-                  items: [
-                    DropdownMenuItem(value: 'ALL', child: Text('All Types')),
-                    DropdownMenuItem(value: 'TD', child: Text('TD')),
-                    DropdownMenuItem(value: 'TP', child: Text('TP')),
-                  ],
-                  onChanged: (value) {
-                    tempGroupType = value ?? 'ALL';
-                  },
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _sortBy = tempSortBy;
-                    _groupType = tempGroupType;
-                  });
-                  _applyFilters();
-                  Navigator.pop(context);
-                },
-                child: Text('Apply'),
-              ),
-            ],
-          );
-        },
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.className.length > 16
-              ? widget.className.substring(0, 16) + '...'
-              : widget.className,
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-        ),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          children: [
-            // Search & Filter Row
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      _applyFilters(); // Apply filter whenever search changes
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Search group...',
-                      prefixIcon: Icon(FontAwesomeIcons.search,
-                          color: Colors.cyan, size: 20),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(FontAwesomeIcons.xmark,
-                                  color: Colors.blueGrey.shade700, size: 18),
-                              onPressed: () {
-                                setState(() {
-                                  _searchController.clear();
-                                  _applyFilters(); // Reset filter
-                                });
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.transparent),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.cyan, width: 2),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.transparent),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Material(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: Icon(FontAwesomeIcons.sliders,
-                        color: Colors.cyan, size: 20),
-                    onPressed: _showFilterDialog,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Container(
-                width: 250,
-                height: 45,
-                child: ElevatedButton.icon(
-                  onPressed: _showCreateGroupDialog,
-                  icon: SvgPicture.asset(
-                    'assets/icons/plus.svg',
-                    width: 20,
-                    height: 20,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    'Create New Group',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyan,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: _filteredGroups.isEmpty
-                  ? Center(
-                      child: Text('No matching groups found',
-                          style: TextStyle(color: Colors.grey)))
-                  : ListView.builder(
-                      itemCount: _filteredGroups.length,
-                      itemBuilder: (context, index) {
-                        final grp = _filteredGroups[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 4,
-                          child: ListTile(
-                            contentPadding: EdgeInsets.all(16),
-                            title: Text(grp['name']!,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 18)),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text('Type: ${grp['type']}',
-                                  style: TextStyle(fontSize: 14)),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(FontAwesomeIcons.edit,
-                                      size: 18, color: Colors.teal),
-                                  onPressed: () {
-                                    _showUpdateGroupDialog(
-                                        grp['name']!, grp['type']!);
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(FontAwesomeIcons.deleteLeft,
-                                      size: 18, color: Colors.red),
-                                  onPressed: () {
-                                    _deleteGroup(grp['name']!);
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(FontAwesomeIcons.plus,
-                                      size: 18, color: Colors.blue),
-                                  onPressed: () {
-                                    _showAddSessionsDialog(grp['name']!);
-                                  },
-                                ),
-                              ],
-                            ),
-                            onTap: () {
-                              // Navigate to the Session screen with the group name
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SessionsScreen(
-                                      groupName: grp[
-                                          'name']!), // Pass group name to the new screen
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _search(String query) {
+    final lowerQuery = query.toLowerCase();
+    setState(() {
+      _filteredGroups = groups.where((group) {
+        return group['name'].toLowerCase().contains(lowerQuery);
+      }).toList();
+    });
   }
 
   void _showCreateGroupDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String tempGroupName = ''; // Initially empty
-        String tempGroupType = ''; // Initially empty
-
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text('Create Group',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Group Name TextField
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Group Name',
-                  hintText: 'Enter Group Name',
-                ),
-                onChanged: (value) {
-                  tempGroupName = value;
-                },
-              ),
-              SizedBox(height: 10),
-
-              // Group Type Dropdown
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Group Type'),
-                value: tempGroupType.isEmpty ? null : tempGroupType,
-                items: [
-                  DropdownMenuItem(value: '', child: Text('Select Type')),
-                  DropdownMenuItem(value: 'TD', child: Text('TD')),
-                  DropdownMenuItem(value: 'TP', child: Text('TP')),
-                ],
-                onChanged: (value) =>
-                    setState(() => tempGroupType = value ?? ''),
-              ),
-            ],
-          ),
-          actions: [
-            // Cancel Button
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-
-            // Create Group Button
-            ElevatedButton(
-              onPressed: () {
-                if (tempGroupName.isNotEmpty && tempGroupType.isNotEmpty) {
-                  // Call your group creation logic here
-                  // For example: _createGroup(tempGroupName, tempGroupType);
-
-                  // After group creation, close the dialog
-                  Navigator.pop(context);
-                } else {
-                  // Show a message to the user to enter valid data
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please fill in both fields!')),
-                  );
-                }
-              },
-              child: Text('Create Group'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showUpdateGroupDialog(String groupName, String groupType) {
-    // Implement the same logic as create group dialog but pre-fill values for update
-    showDialog(
-      context: context,
-      builder: (context) {
-        String tempGroupName = groupName;
-        String tempGroupType = groupType;
-
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text('Update Group',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Group Name TextField
-              TextFormField(
-                initialValue: tempGroupName,
-                decoration: InputDecoration(
-                  labelText: 'Group Name',
-                  hintText: 'Enter Group Name',
-                ),
-                onChanged: (value) {
-                  tempGroupName = value;
-                },
-              ),
-              SizedBox(height: 10),
-
-              // Group Type Dropdown
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Group Type'),
-                value: tempGroupType.isEmpty ? null : tempGroupType,
-                items: [
-                  DropdownMenuItem(value: '', child: Text('Select Type')),
-                  DropdownMenuItem(value: 'TD', child: Text('TD')),
-                  DropdownMenuItem(value: 'TP', child: Text('TP')),
-                ],
-                onChanged: (value) =>
-                    setState(() => tempGroupType = value ?? ''),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Logic to update the group
-                Navigator.pop(context);
-              },
-              child: Text('Update Group'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteGroup(String groupName) {
-    // Implement the logic to delete the group
-    setState(() {
-      _allGroups.removeWhere((group) => group['name'] == groupName);
-    });
-  }
-
-  void _showAddSessionsDialog(String groupName) {
-    // Implement logic for adding sessions for the group
-    showDialog(
-      context: context,
-      builder: (context) {
-        String sessionName = '';
-        DateTime startDate = DateTime.now();
-        DateTime endDate = DateTime.now().add(Duration(days: 7));
-
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text('Sessions $groupName'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Session Name',
-                ),
-                onChanged: (value) {
-                  sessionName = value;
-                },
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Start Date',
-                ),
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: startDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2101),
-                  );
-                  if (picked != null && picked != startDate)
-                    setState(() {
-                      startDate = picked;
-                    });
-                },
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'End Date',
-                ),
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: endDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2101),
-                  );
-                  if (picked != null && picked != endDate)
-                    setState(() {
-                      endDate = picked;
-                    });
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Logic to add the session
-                Navigator.pop(context);
-              },
-              child: Text('Add Session'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class SessionsScreen extends StatelessWidget {
-  final String groupName;
-
-  const SessionsScreen({required this.groupName});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Sessions  $groupName'),
-      ),
-      body: Center(
-        child: Text('Sessions  $groupName'),
-      ),
-    );
-  }
-}
-
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-/*class SessionsScreen extends StatefulWidget {
-  final String groupName; // Group name passed from GroupsScreen
-
-  SessionsScreen({required this.groupName});
-
-  @override
-  _SessionsScreenState createState() => _SessionsScreenState();
-}
-
-class _SessionsScreenState extends State<SessionsScreen> {
-  final TextEditingController _sessionNameController = TextEditingController();
-  final TextEditingController _startDateController = TextEditingController();
-  final TextEditingController _endDateController = TextEditingController();
-
-  String _sessionName = '';
-  DateTime? _startDate;
-  DateTime? _endDate;
-
-  // Function to save the session
-  void _saveSession() {
-    if (_sessionName.isNotEmpty && _startDate != null && _endDate != null) {
-      // For now, just print the session details
-      print("Session: $_sessionName");
-      print("Start Date: $_startDate");
-      print("End Date: $_endDate");
-
-      // Optionally, save this session to a database or a list here
-
-      // Navigate back after saving
-      Navigator.pop(context);
-    } else {
-      // Show an alert if data is incomplete
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Please fill in all fields."),
-        backgroundColor: Colors.red,
-      ));
+    if (selectedClassId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a class first')),
+      );
+      return;
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.groupName),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _sessionNameController,
-              decoration: InputDecoration(labelText: 'Session Name'),
-              onChanged: (value) {
-                setState(() {
-                  _sessionName = value;
-                });
-              },
+    final nameController = TextEditingController();
+    final typeController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Create New Group', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildTextField(nameController, 'Group Name'),
+                _buildTextField(typeController, 'Group Type'),
+              ],
             ),
-            TextField(
-              controller: _startDateController,
-              decoration: InputDecoration(labelText: 'Start Date'),
-              onTap: () async {
-                DateTime? selectedDate = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2101),
-                );
-                if (selectedDate != null) {
-                  setState(() {
-                    _startDate = selectedDate;
-                    _startDateController.text = selectedDate.toLocal().toString().split(' ')[0];
-                  });
-                }
-              },
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
             ),
-            TextField(
-              controller: _endDateController,
-              decoration: InputDecoration(labelText: 'End Date'),
-              onTap: () async {
-                DateTime? selectedDate = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2101),
-                );
-                if (selectedDate != null) {
-                  setState(() {
-                    _endDate = selectedDate;
-                    _endDateController.text = selectedDate.toLocal().toString().split(' ')[0];
-                  });
-                }
-              },
-            ),
-            SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _saveSession,
-              child: Text('Save Session'),
+              child: const Text('Create'),
+              onPressed: () async {
+                if (nameController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Group name cannot be empty')),
+                  );
+                  return;
+                }
+
+                Map<String, dynamic> newGroup = {
+                  'name': nameController.text,
+                  'type': typeController.text,
+                  'class_id': selectedClassId,
+                };
+                
+                try {
+                  await ApiService.createGroup(newGroup);
+                  Navigator.pop(context);
+                  _loadGroups(selectedClassId!);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to create group: ${e.toString()}')),
+                  );
+                }
+              },
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showEditGroupDialog(Map<String, dynamic> group) {
+    final nameController = TextEditingController(text: group['name'] ?? '');
+  final typeController = TextEditingController(text: group['type'] ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Edit Group', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildTextField(nameController, 'Group Name'),
+                _buildTextField(typeController, 'Group Type'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            ElevatedButton(
+              child: const Text('Update'),
+              onPressed: () async {
+                if (nameController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Group name cannot be empty')),
+                  );
+                  return;
+                }
+
+                Map<String, dynamic> updatedGroup = {
+                  'name': nameController.text,
+                  'type': typeController.text,
+                };
+                
+                try {
+                  await ApiService.updateGroup(group['id'], updatedGroup);
+                  Navigator.pop(context);
+                  _loadGroups(selectedClassId!);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to update group: ${e.toString()}')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteGroup(int groupId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Deletion'),
+        content: const Text('Are you sure you want to delete this group?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel')
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ApiService.deleteGroup(groupId);
+                _loadGroups(selectedClassId!);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to delete group: ${e.toString()}')),
+                );
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, {bool isNumber = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: TextField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
   }
-}
-*/
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////SESSION////////////////////////////////////////////////////////////////
 
-class studentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text("student ", style: TextStyle(fontSize: 24)),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Groups'),
+        centerTitle: true,
+      ),
+      body: isLoading 
+          ? const Center(child: CircularProgressIndicator()) 
+          : error != null
+              ? Center(child: Text('Error: $error'))
+              : Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            isExpanded: true,
+                            value: selectedClassId,
+                            hint: const Text('Select a class'),
+                            onChanged: (int? value) {
+                              if (value != null) {
+                                _loadGroups(value);
+                              }
+                            },
+                            items: classes.map<DropdownMenuItem<int>>((cls) {
+                              return DropdownMenuItem<int>(
+                                value: cls['id'],
+                                child: Text('${cls['name']} (${cls['speciality']} - ${cls['year']})'),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                      
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: _search,
+                              decoration: InputDecoration(
+                                hintText: 'Search group...',
+                                prefixIcon: const Icon(
+                                  FontAwesomeIcons.search,
+                                  color: Colors.cyan,
+                                  size: 20,
+                                ),
+                                suffixIcon: _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(
+                                          FontAwesomeIcons.xmark,
+                                          color: Colors.blueGrey.shade700,
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _searchController.clear();
+                                            _filteredGroups = List.from(groups);
+                                          });
+                                        },
+                                      )
+                                    : null,
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(color: Colors.transparent),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(color: Colors.cyan, width: 2),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(color: Colors.transparent),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Material(
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(
+                                FontAwesomeIcons.sliders,
+                                color: Colors.cyan,
+                                size: 20,
+                              ),
+                              onPressed: () {},
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: SizedBox(
+                          width: 250,
+                          height: 45,
+                          child: ElevatedButton.icon(
+                            onPressed: _showCreateGroupDialog,
+                            icon: SvgPicture.asset(
+                              'assets/icons/plus.svg',
+                              width: 20,
+                              height: 20,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              'Create New Group',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.cyan,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: _filteredGroups.isEmpty
+                            ? const Center(
+                                child: Text('No groups found for this class',
+                                    style: TextStyle(color: Colors.grey)))
+                            : ListView.builder(
+                                itemCount: _filteredGroups.length,
+                                itemBuilder: (context, index) {
+                                  final group = _filteredGroups[index];
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(vertical: 8),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 4,
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.all(16),
+                                      title: Text(
+                                        group['name'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold, fontSize: 18),
+                                      ),
+                                      subtitle: Padding(
+                                        padding: const EdgeInsets.only(top: 8.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Type: ${group['type'] ?? 'Not specified'}',
+                                              style: const TextStyle(fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.edit, color: Colors.blue),
+                                            onPressed: () => _showEditGroupDialog(group),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, color: Colors.red),
+                                            onPressed: () => _confirmDeleteGroup(group['id']),
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () => _showEditGroupDialog(group),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
     );
   }
 }
 
 class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text("Profile Screen", style: TextStyle(fontSize: 24)),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage('assets/images/profile_placeholder.png'),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'User Name',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'user@example.com',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 30),
+            _buildProfileButton('Edit Profile', Icons.edit, () {}),
+            _buildProfileButton('Settings', Icons.settings, () {}),
+            _buildProfileButton('Logout', Icons.logout, () {}),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileButton(String text, IconData icon, VoidCallback onPressed) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.cyan,
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(icon),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(width: 24),
+          ],
+        ),
+      ),
     );
   }
 }
