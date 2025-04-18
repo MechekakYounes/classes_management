@@ -9,10 +9,11 @@ class Group extends Model
     protected $fillable = [
         'name',
         'type',
+        'class_id'
     ];
 
 
-    public function class()
+    public function classes()
 {
     return $this->belongsTo(Classes::class);
 }

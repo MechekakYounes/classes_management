@@ -644,7 +644,7 @@ class _GroupScreenState extends State<GroupScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool isLoading = true;
   String? error;
-  int? selectedClassId;
+  late int selectedClassId;
 
   List<dynamic> classes = [];
   List<dynamic> groups = [];
@@ -690,7 +690,6 @@ class _GroupScreenState extends State<GroupScreen> {
 
     try {
       groups = await ApiService.getGroups();
-      // Filter groups by classId if your API doesn't support filtering
       groups = groups.where((group) => group['class_id'] == classId).toList();
       _filteredGroups = List.from(groups);
     } catch (e) {
@@ -761,9 +760,9 @@ class _GroupScreenState extends State<GroupScreen> {
                 };
 
                 try {
-                  await ApiService.createGroup(newGroup);
+                  await ApiService.createGroup(selectedClassId, newGroup);
                   Navigator.pop(context);
-                  _loadGroups(selectedClassId!);
+                  _loadGroups(selectedClassId);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -821,7 +820,8 @@ class _GroupScreenState extends State<GroupScreen> {
                 };
 
                 try {
-                  await ApiService.updateGroup(group['id'], updatedGroup);
+                  await ApiService.updateGroup(
+                      selectedClassId, group['id'], updatedGroup);
                   Navigator.pop(context);
                   _loadGroups(selectedClassId!);
                 } catch (e) {
@@ -853,8 +853,8 @@ class _GroupScreenState extends State<GroupScreen> {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await ApiService.deleteGroup(groupId);
-                _loadGroups(selectedClassId!);
+                await ApiService.deleteGroup(selectedClassId, groupId);
+                _loadGroups(selectedClassId);
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

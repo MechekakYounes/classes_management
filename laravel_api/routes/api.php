@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClassController;
+use App\Http\Controllers\GroupController;
 
 Route::middleware('api')->group(function () {
     Route::get('/classes', [ClassController::class, 'index']);
@@ -10,9 +11,10 @@ Route::middleware('api')->group(function () {
     Route::put('/classes/{id}', [ClassController::class, 'update']);
     Route::delete('/classes/{id}', [ClassController::class, 'destroy']);
 
-    Route::get('/grp', [GroupController::class, 'allGroups']);
-    Route::get('/classes/{classId}/grp', [GroupController::class, 'index']);
-    Route::post('/classes/{classId}/grp', [GroupController::class, 'store']);
-    Route::put('/classes/{classId}/grp/{groupId}', [GroupController::class, 'update']);
-    Route::delete('/classes/{classId}/grp/{groupId}', [GroupController::class, 'destroy']);
+    Route::get('/groups', [GroupController::class, 'allGroups']);
+    Route::get('/classes/{classId}/groups', [GroupController::class, 'index']);
+    Route::post('/classes/{classId}/groups', [GroupController::class, 'store']);
+    Route::put('/classes/{classId}/groups/{groupId}', [GroupController::class, 'update']);
+    Route::delete('/classes/{classId}/groups/{groupId}', [GroupController::class, 'destroy']);
+    
 });

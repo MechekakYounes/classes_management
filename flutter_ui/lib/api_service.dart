@@ -6,8 +6,9 @@ class ApiService {
   static const String _baseUrl =
       'http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
   static const String _classesUrl = '$_baseUrl/classes';
-  static const String _groupsUrl =
-      '$_baseUrl/groups'; // Directly targets the 'grp' table
+  static const String _groupsUrl = '$_baseUrl/groups';
+
+  ///classes/{classId}/groups/{groupId}'
 
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',
@@ -15,7 +16,7 @@ class ApiService {
     'X-Requested-With': 'XMLHttpRequest',
   };
 
-  // ========== CLASSES ==========
+  // ================================== CLASSES ===================================================================
 
   static Future<List<dynamic>> getClasses() async {
     try {
@@ -88,7 +89,7 @@ class ApiService {
     }
   }
 
-  // ========== GROUPS (grp TABLE) ==========
+  // ========================== GROUPS=================================
 
   static Future<List<dynamic>> getGroups() async {
     try {
@@ -106,49 +107,40 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> createGroup(
-      Map<String, dynamic> groupData) async {
+      int classId, Map<String, dynamic> groupData) async {
     try {
-      print('Creating group with data: $groupData'); // Debug log
+      final url = '$_baseUrl/classes/$classId/groups';
+      print('Creating group at: $url with data: $groupData');
 
       final response = await http
           .post(
-            Uri.parse(_groupsUrl),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
+            Uri.parse(url),
+            headers: _headers,
             body: json.encode(groupData),
           )
           .timeout(const Duration(seconds: 10));
 
-      print('Response status: ${response.statusCode}'); // Debug log
-      print('Response body: ${response.body}'); // Debug log
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        try {
-          final errorResponse = json.decode(response.body);
-          throw Exception(errorResponse['message'] ??
-              'Failed to create group (Status: ${response.statusCode})');
-        } catch (_) {
-          throw Exception(
-              'Failed to create group (Status: ${response.statusCode})');
-        }
+        final errorResponse = json.decode(response.body);
+        throw Exception(errorResponse['message'] ??
+            'Failed to create group (Status: ${response.statusCode})');
       }
-    } on SocketException {
-      throw Exception('No internet connection');
     } catch (e) {
-      throw Exception('Failed to create group: ${e.toString()}');
+      throw Exception('Failed to create group: $e');
     }
   }
 
   static Future<Map<String, dynamic>> updateGroup(
-      int groupId, Map<String, dynamic> groupData) async {
+      int classId, int groupId, Map<String, dynamic> groupData) async {
     try {
       final response = await http
           .put(
-            Uri.parse('$_groupsUrl/$groupId'),
+            Uri.parse('$_baseUrl/classes/$classId/groups/$groupId'),
             headers: _headers,
             body: json.encode(groupData),
           )
@@ -164,11 +156,12 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteGroup(int groupId) async {
+  static Future<void> deleteGroup(int classId, int groupId) async {
     try {
+      final url = '$_baseUrl/classes/$classId/groups/$groupId';
       final response = await http
           .delete(
-            Uri.parse('$_groupsUrl/$groupId'),
+            Uri.parse(url),
             headers: _headers,
           )
           .timeout(const Duration(seconds: 10));
