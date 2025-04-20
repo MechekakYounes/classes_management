@@ -110,7 +110,7 @@ class ApiService {
       int classId, Map<String, dynamic> groupData) async {
     try {
       final url = '$_baseUrl/classes/$classId/groups';
-      print('Creating group at: $url with data: $groupData');
+      //print('Creating group at: $url with data: $groupData');
 
       final response = await http
           .post(
@@ -120,8 +120,8 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      //print('Response status: ${response.statusCode}');
+      //print('Response body: ${response.body}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         return json.decode(response.body);

@@ -556,7 +556,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           )
                                         ],
                                       ),
-                                      onTap: () => _showEditClassDialog(cls),
+                                      onTap: () => _GroupScreenState,
                                     ),
                                   );
                                 },
@@ -921,7 +921,7 @@ class _GroupScreenState extends State<GroupScreen> {
                               return DropdownMenuItem<int>(
                                 value: cls['id'],
                                 child: Text(
-                                    '${cls['name']} (${cls['speciality']} - ${cls['year']})'),
+                                    '${cls['name']} (${cls['speciality']} - ${cls['level']} - ${cls['year']})'),
                               );
                             }).toList(),
                           ),
