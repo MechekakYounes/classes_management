@@ -711,13 +711,6 @@ class _GroupScreenState extends State<GroupScreen> {
   }
 
   void _showCreateGroupDialog() {
-    if (selectedClassId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a class first')),
-      );
-      return;
-    }
-
     final _nameController = TextEditingController();
     final _typeController = TextEditingController();
 
