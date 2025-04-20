@@ -16,9 +16,19 @@ class Group extends Model
         'type',
         'class_id'
     ];
+<<<<<<< HEAD
     
     public function class()
     {
         return $this->belongsTo(Classes::class, 'class_id');
     }
+=======
+
+
+    public function classes()
+{
+    return $this->belongsTo(Classes::class);
+}
+
+>>>>>>> 3c641c4b476c5178c927d14691c05ec676d1b318
 }
