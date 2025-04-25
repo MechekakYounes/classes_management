@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamp('s_date');
             $table->timestamp('end_date');
-            $table->text('comment');
+            $table->text('comment')->nullable();
             $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
             $table->timestamps();
         });

@@ -12,6 +12,7 @@ class Student extends Model
         'group_id'
     ];
 
+    protected $table = 'student';
 
     public function groups()
 {

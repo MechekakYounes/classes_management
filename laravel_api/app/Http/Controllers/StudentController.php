@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Models\Student;
+
 
 class StudentController extends Controller
 {
@@ -33,5 +35,10 @@ public function import(Request $request)
     }
 
     return response()->json(['message' => 'Students imported successfully']);
+}
+
+public function index(Request $request){
+    $students = Student::where('group_id',$request->group_id)->get();
+    return response()->json($students);
 }
 }

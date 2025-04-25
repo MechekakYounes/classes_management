@@ -11,8 +11,8 @@ class SessionController extends Controller
      * Display a listing of the resource.
      */
     public function index($groupId)
-    {
-        return Session::where('group_id', $groupId)->get();
+    {  $sessions=Session::where('group_id', $groupId)->get();
+        return response()->json($sessions);
     }
 
     /**

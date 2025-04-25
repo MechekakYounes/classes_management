@@ -22,15 +22,16 @@ Route::middleware('api')->group(function () {
     Route::put('/classes/{classId}/groups/{groupId}', [GroupController::class, 'update']);
     Route::delete('/classes/{classId}/groups/{groupId}', [GroupController::class, 'destroy']);
 ////////////////////students/////////////////
-    Route::post('/students/import', [StudentController::class, 'import']);
+    Route::post('/student/import', [StudentController::class, 'import']);
+    Route::get('/student/by-group/{groupId}',[StudentController::class,'index']);
  ///////////session///////////////
-    Route::get('/groups/{groupId}/sessions', [SessionController::class, 'index']);
-    Route::post('/groups/{groupId}/sessions', [SessionController::class, 'store']);
-    Route::put('/groups/{groupId}/sessions/{id}', [SessionController::class, 'update']);
-    Route::delete('/groups/{groupId}/sessions/{id}', [SessionController::class, 'destroy']);
+    Route::get('/groups/{groupId}/session', [SessionController::class, 'index']);
+    Route::post('/groups/{groupId}/session', [SessionController::class, 'store']);
+    Route::put('/groups/{groupId}/session/{id}', [SessionController::class, 'update']);
+    Route::delete('/groups/{groupId}/session/{id}', [SessionController::class, 'destroy']);
     ////////////////////attendence/////////////////////////////////////////////////
-    Route::get('/sessions/{sessionId}/attendances', [AttendanceController::class, 'index']);
-    Route::post('/sessions/{sessionId}/attendances', [AttendanceController::class, 'store']);
-    Route::put('/sessions/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'update']);
-    Route::delete('/sessions/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'destroy']);
+    Route::get('/session/{sessionId}/attendances', [AttendanceController::class, 'index']);
+    Route::post('/session/{sessionId}/attendances', [AttendanceController::class, 'store']);
+    Route::put('/session/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'update']);
+    Route::delete('/session/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'destroy']);
 });
