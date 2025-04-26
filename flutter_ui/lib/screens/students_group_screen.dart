@@ -70,15 +70,15 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
     final lowerQuery = query.toLowerCase();
     setState(() {
       filteredStudents = students.where((student) {
-        final firstName = (student['first_name'] ?? '').toString().toLowerCase();
-        final lastName = (student['last_name'] ?? '').toString().toLowerCase();
+        final firstName = (student['fname'] ?? '').toString().toLowerCase();
+        final lastName = (student['name'] ?? '').toString().toLowerCase();
         final email = (student['email'] ?? '').toString().toLowerCase();
-        final phone = (student['phone'] ?? '').toString().toLowerCase();
+        //final phone = (student['phone'] ?? '').toString().toLowerCase();
 
         return firstName.contains(lowerQuery) ||
             lastName.contains(lowerQuery) ||
-            email.contains(lowerQuery) ||
-            phone.contains(lowerQuery);
+            email.contains(lowerQuery); // ||
+        // phone.contains(lowerQuery);
       }).toList();
     });
   }
@@ -87,7 +87,7 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
     setState(() {
       if (_sortBy == 'name_asc') {
         filteredStudents.sort((a, b) {
-          final nameA = '${a['first_name']} ${a['last_name']}'.toLowerCase();
+          final nameA = '${a['fname']} ${a['name']}'.toLowerCase();
           final nameB = '${b['first_name']} ${b['last_name']}'.toLowerCase();
           return nameA.compareTo(nameB);
         });
@@ -120,23 +120,30 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
         String tempSortBy = _sortBy;
 
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Sort Options', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Sort Options',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(
                   labelText: 'Sort By',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 value: tempSortBy.isEmpty ? null : tempSortBy,
                 items: [
                   DropdownMenuItem(value: '', child: Text('Default')),
-                  DropdownMenuItem(value: 'name_asc', child: Text('Name (A-Z)')),
-                  DropdownMenuItem(value: 'name_desc', child: Text('Name (Z-A)')),
-                  DropdownMenuItem(value: 'email_asc', child: Text('Email (A-Z)')),
-                  DropdownMenuItem(value: 'email_desc', child: Text('Email (Z-A)')),
+                  DropdownMenuItem(
+                      value: 'name_asc', child: Text('Name (A-Z)')),
+                  DropdownMenuItem(
+                      value: 'name_desc', child: Text('Name (Z-A)')),
+                  DropdownMenuItem(
+                      value: 'email_asc', child: Text('Email (A-Z)')),
+                  DropdownMenuItem(
+                      value: 'email_desc', child: Text('Email (Z-A)')),
                 ],
                 onChanged: (value) => tempSortBy = value ?? '',
               ),
@@ -173,14 +180,15 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
     final TextEditingController _firstNameController = TextEditingController();
     final TextEditingController _lastNameController = TextEditingController();
     final TextEditingController _emailController = TextEditingController();
-    final TextEditingController _phoneController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Add New Student', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Add New Student',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -216,16 +224,6 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 SizedBox(height: 16),
-                TextField(
-                  controller: _phoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Phone (Optional)',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
               ],
             ),
           ),
@@ -236,19 +234,19 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_firstNameController.text.isEmpty || _lastNameController.text.isEmpty) {
+                if (_firstNameController.text.isEmpty ||
+                    _lastNameController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('First name and last name are required')),
+                    SnackBar(
+                        content: Text('First name and last name are required')),
                   );
                   return;
                 }
 
                 try {
                   final studentData = {
-                    'first_name': _firstNameController.text,
-                    'last_name': _lastNameController.text,
-                    'email': _emailController.text,
-                    'phone': _phoneController.text,
+                    'fname': _firstNameController.text,
+                    'name': _lastNameController.text,
                     'group_id': widget.groupId,
                   };
 
@@ -280,24 +278,20 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
 
   void _showEditStudentDialog(dynamic student) {
     final TextEditingController _firstNameController = TextEditingController(
-      text: student['first_name'] ?? '',
+      text: student['fname'] ?? '',
     );
     final TextEditingController _lastNameController = TextEditingController(
-      text: student['last_name'] ?? '',
-    );
-    final TextEditingController _emailController = TextEditingController(
-      text: student['email'] ?? '',
-    );
-    final TextEditingController _phoneController = TextEditingController(
-      text: student['phone'] ?? '',
+      text: student['name'] ?? '',
     );
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Edit Student', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Edit Student',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -322,27 +316,6 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
                   ),
                 ),
                 SizedBox(height: 16),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: _phoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Phone (Optional)',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
               ],
             ),
           ),
@@ -353,9 +326,11 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_firstNameController.text.isEmpty || _lastNameController.text.isEmpty) {
+                if (_firstNameController.text.isEmpty ||
+                    _lastNameController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('First name and last name are required')),
+                    SnackBar(
+                        content: Text('First name and last name are required')),
                   );
                   return;
                 }
@@ -363,10 +338,9 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
                 try {
                   final studentId = int.parse(student['id'].toString());
                   final studentData = {
-                    'first_name': _firstNameController.text,
-                    'last_name': _lastNameController.text,
-                    'email': _emailController.text,
-                    'phone': _phoneController.text,
+                    'fname': _firstNameController.text,
+                    'name': _lastNameController.text,
+                    'group_id': widget.groupId
                   };
 
                   await ApiService.updateStudent(studentId, studentData);
@@ -433,7 +407,8 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Center(
             child: Text(
               'Student Details',
@@ -444,11 +419,11 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoRow('First Name', student['first_name'] ?? 'N/A'),
-              _buildInfoRow('Last Name', student['last_name'] ?? 'N/A'),
+              _buildInfoRow('First Name', student['fname'] ?? 'N/A'),
+              _buildInfoRow('Last Name', student['name'] ?? 'N/A'),
               _buildInfoRow('Email', student['email'] ?? 'N/A'),
-              _buildInfoRow('Phone', student['phone'] ?? 'N/A'),
-              _buildInfoRow('Created At', _formatDateTime(student['created_at'])),
+              _buildInfoRow(
+                  'Created At', _formatDateTime(student['created_at'])),
             ],
           ),
           actions: [
@@ -516,18 +491,20 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search students...',
-                      prefixIcon: Icon(FontAwesomeIcons.search, color: Colors.cyan, size: 18),
+                      prefixIcon: Icon(FontAwesomeIcons.search,
+                          color: Colors.cyan, size: 18),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                        icon: Icon(FontAwesomeIcons.xmark, color: Colors.blueGrey.shade700, size: 16),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            filteredStudents = List.from(students);
-                            _applySorting();
-                          });
-                        },
-                      )
+                              icon: Icon(FontAwesomeIcons.xmark,
+                                  color: Colors.blueGrey.shade700, size: 16),
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                  filteredStudents = List.from(students);
+                                  _applySorting();
+                                });
+                              },
+                            )
                           : null,
                       filled: true,
                       fillColor: Colors.white,
@@ -575,7 +552,7 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
                 Spacer(),
                 ElevatedButton.icon(
                   icon: Icon(FontAwesomeIcons.plus, size: 16),
-                  label: Text('Add Student'),
+                  label: Text('Add  a Student'),
                   onPressed: _showAddStudentDialog,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.cyan,
@@ -592,107 +569,114 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
             Expanded(
               child: students.isEmpty
                   ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(FontAwesomeIcons.userGroup, size: 60, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text(
-                      'No students in this group',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _showAddStudentDialog,
-                      child: Text('Add First Student'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyan,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(FontAwesomeIcons.userGroup,
+                              size: 60, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            'No students in this group',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _showAddStudentDialog,
+                            child: Text('Add First Student'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.cyan,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              )
+                    )
                   : filteredStudents.isEmpty
-                  ? Center(
-                child: Text('No matching students found', style: TextStyle(color: Colors.grey)),
-              )
-                  : ListView.builder(
-                itemCount: filteredStudents.length,
-                itemBuilder: (context, index) {
-                  final student = filteredStudents[index];
-                  return Card(
-                    margin: EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 2,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () => _showStudentDetailsDialog(student),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.cyan.shade100,
-                              radius: 25,
-                              child: Text(
-                                '${student['first_name']?[0]}${student['last_name']?[0]}',
-                                style: TextStyle(
-                                  color: Colors.cyan.shade800,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
+                      ? Center(
+                          child: Text('No matching students found',
+                              style: TextStyle(color: Colors.grey)),
+                        )
+                      : ListView.builder(
+                          itemCount: filteredStudents.length,
+                          itemBuilder: (context, index) {
+                            final student = filteredStudents[index];
+                            return Card(
+                              margin: EdgeInsets.only(bottom: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 2,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () => _showStudentDetailsDialog(student),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor: Colors.cyan.shade100,
+                                        radius: 25,
+                                        child: Text(
+                                          '${student['fname']?[0]}${student['name']?[0]}',
+                                          style: TextStyle(
+                                            color: Colors.cyan.shade800,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${student['fname']} ${student['name']}',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              student['email'] ?? 'No email',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(FontAwesomeIcons.pen,
+                                                size: 16, color: Colors.teal),
+                                            onPressed: () =>
+                                                _showEditStudentDialog(student),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(FontAwesomeIcons.trash,
+                                                size: 16, color: Colors.red),
+                                            onPressed: () {
+                                              final studentId = int.parse(
+                                                  student['id'].toString());
+                                              _confirmDeleteStudent(studentId);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${student['first_name']} ${student['last_name']}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    student['email'] ?? 'No email',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(FontAwesomeIcons.pen, size: 16, color: Colors.teal),
-                                  onPressed: () => _showEditStudentDialog(student),
-                                ),
-                                IconButton(
-                                  icon: Icon(FontAwesomeIcons.trash, size: 16, color: Colors.red),
-                                  onPressed: () {
-                                    final studentId = int.parse(student['id'].toString());
-                                    _confirmDeleteStudent(studentId);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
             ),
           ],
         ),

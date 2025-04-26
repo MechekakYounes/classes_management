@@ -22,8 +22,12 @@ Route::middleware('api')->group(function () {
     Route::put('/classes/{classId}/groups/{groupId}', [GroupController::class, 'update']);
     Route::delete('/classes/{classId}/groups/{groupId}', [GroupController::class, 'destroy']);
 ////////////////////students/////////////////
-    Route::post('/student/import', [StudentController::class, 'import']);
-    Route::get('/student/by-group/{groupId}',[StudentController::class,'index']);
+    Route::post('/students/import', [StudentController::class, 'import']);
+    Route::get('/students/{groupId}',[StudentController::class,'index']);
+    Route::get('/students',[StudentController::class,'index']);
+    Route::post('/students',[StudentController::class,'store']);
+    Route::put('/students/{studentId}',[StudentController::class,'update']);
+    Route::delete('/students/{studentId}',[StudentController::class,'destroy']);
  ///////////session///////////////
     Route::get('/groups/{groupId}/session', [SessionController::class, 'index']);
     Route::post('/groups/{groupId}/session', [SessionController::class, 'store']);
@@ -34,4 +38,5 @@ Route::middleware('api')->group(function () {
     Route::post('/session/{sessionId}/attendances', [AttendanceController::class, 'store']);
     Route::put('/session/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'update']);
     Route::delete('/session/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'destroy']);
+
 });

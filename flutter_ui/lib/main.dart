@@ -58,8 +58,8 @@ class _MainTabControllerState extends State<MainTabController> {
 
   final List<Widget> _screens = [
     DashboardScreen(),
-     StudentScreen(),
-     ProfileScreen(),
+    StudentsScreen(),
+    ProfileScreen(),
   ];
 
   void _onTabTapped(int index) {

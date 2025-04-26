@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import '../api_service.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -22,9 +23,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   bool isLoading = true;
   String? error;
   List<dynamic> students = [];
-  Map<int, String> attendanceStatus = {};
+  Map<int, bool> attendanceStatus = {};
   bool hasUnsavedChanges = false;
-  List<dynamic> existingAttendanceRecords = [];
 
   @override
   void initState() {
@@ -54,26 +54,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       // Load existing attendance records for this session
       final attendanceData = await ApiService.getAttendanceBySession(widget.sessionId);
 
-      // Store the existing attendance records for later use during updates
-      existingAttendanceRecords = attendanceData;
-
       // Initialize attendance status map
-      Map<int, String> status = {};
+      Map<int, bool> status = {};
       for (var student in studentsData) {
         int studentId = int.parse(student['id'].toString());
-        
-        // Find if student has existing attendance record
-        var existingRecord = attendanceData.firstWhere(
-          (record) => int.parse(record['student_id'].toString()) == studentId,
-          orElse: () => null,
+        // Check if student is marked as present in existing attendance data
+        bool isPresent = attendanceData.any((record) =>
+        int.parse(record['student_id'].toString()) == studentId &&
+            record['status'] == 'present'
         );
-        
-        // Set status based on existing record or default to 'absent'
-        if (existingRecord != null) {
-          status[studentId] = existingRecord['status'] ?? 'absent';
-        } else {
-          status[studentId] = 'absent';
-        }
+        status[studentId] = isPresent;
       }
 
       setState(() {
@@ -97,72 +87,40 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     try {
       // Prepare attendance data
       List<Map<String, dynamic>> attendanceData = [];
-      
-      // Build the list of attendance records from the attendance status map
-      attendanceStatus.forEach((studentId, status) {
+      attendanceStatus.forEach((studentId, isPresent) {
         attendanceData.add({
           'student_id': studentId,
           'session_id': widget.sessionId,
-          'status': status,
+          'status': isPresent ? 'present' : 'absent',
+          'note': '', // Optional note field
         });
       });
-      
-      print('Saving attendance for ${attendanceData.length} students');
-      
-      // Call the bulk create/update method with the session ID and attendance data
-      final result = await ApiService.bulkCreateAttendance(
-        widget.sessionId, 
-        attendanceData
-      );
-      
-      // Refresh attendance data after saving
-      await _loadAttendanceData();
-      
+
+      // Use the bulkCreateAttendance method from ApiService instead
+      await ApiService.bulkCreateAttendance(widget.sessionId, attendanceData);
+
       setState(() {
         isLoading = false;
         hasUnsavedChanges = false;
       });
-      
-      // Show success message
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Attendance saved successfully'),
-          backgroundColor: result['status'] == 'partial' ? Colors.orange : Colors.green,
-        ),
+        const SnackBar(content: Text('Attendance saved successfully')),
       );
     } catch (e) {
-      print('Error in _saveAttendance: $e');
-      
       setState(() {
         isLoading = false;
       });
-      
-      // Show error message
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save attendance: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Failed to save attendance: $e')),
       );
     }
   }
 
-  void _toggleAttendance(int studentId) {
+  void _toggleAttendance(int studentId, bool value) {
     setState(() {
-      // Cycle through the statuses: absent -> present -> justified -> absent
-      switch (attendanceStatus[studentId]) {
-        case 'absent':
-          attendanceStatus[studentId] = 'present';
-          break;
-        case 'present':
-          attendanceStatus[studentId] = 'justified';
-          break;
-        case 'justified':
-          attendanceStatus[studentId] = 'absent';
-          break;
-        default:
-          attendanceStatus[studentId] = 'absent';
-      }
+      attendanceStatus[studentId] = value;
       hasUnsavedChanges = true;
     });
   }
@@ -171,7 +129,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     setState(() {
       for (var student in students) {
         int studentId = int.parse(student['id'].toString());
-        attendanceStatus[studentId] = 'present';
+        attendanceStatus[studentId] = true;
       }
       hasUnsavedChanges = true;
     });
@@ -181,46 +139,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     setState(() {
       for (var student in students) {
         int studentId = int.parse(student['id'].toString());
-        attendanceStatus[studentId] = 'absent';
+        attendanceStatus[studentId] = false;
       }
       hasUnsavedChanges = true;
     });
-  }
-
-  void _markAllJustified() {
-    setState(() {
-      for (var student in students) {
-        int studentId = int.parse(student['id'].toString());
-        attendanceStatus[studentId] = 'justified';
-      }
-      hasUnsavedChanges = true;
-    });
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'present':
-        return Colors.green;
-      case 'absent':
-        return Colors.red.shade300;
-      case 'justified':
-        return Colors.amber;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'present':
-        return FontAwesomeIcons.check;
-      case 'absent':
-        return FontAwesomeIcons.xmark;
-      case 'justified':
-        return FontAwesomeIcons.fileLines;
-      default:
-        return FontAwesomeIcons.question;
-    }
   }
 
   @override
@@ -276,7 +198,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           children: [
             _buildSessionInfo(),
             _buildActionButtons(),
-            _buildAttendanceLegend(),
             Expanded(
               child: _buildStudentsList(),
             ),
@@ -308,11 +229,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   Widget _buildSessionInfo() {
-    // Count the number of each status
-    int presentCount = attendanceStatus.values.where((status) => status == 'present').length;
-    int justifiedCount = attendanceStatus.values.where((status) => status == 'justified').length;
-    int absentCount = attendanceStatus.values.where((status) => status == 'absent').length;
-    
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -353,35 +269,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   color: Colors.grey.shade700,
                 ),
               ),
-              Row(
-                children: [
-                  Text(
-                    'Present: $presentCount',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Justified: $justifiedCount',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.amber.shade800,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Absent: $absentCount',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.red.shade400,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              Text(
+                'Present: ${attendanceStatus.values.where((present) => present).length}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -398,7 +292,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           Expanded(
             child: ElevatedButton.icon(
               icon: const Icon(FontAwesomeIcons.check, size: 16),
-              label: const Text('All Present'),
+              label: const Text('Mark All Present'),
               onPressed: _markAllPresent,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
@@ -410,27 +304,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: ElevatedButton.icon(
-              icon: const Icon(FontAwesomeIcons.fileLines, size: 16),
-              label: const Text('All Justified'),
-              onPressed: _markAllJustified,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton.icon(
               icon: const Icon(FontAwesomeIcons.xmark, size: 16),
-              label: const Text('All Absent'),
+              label: const Text('Mark All Absent'),
               onPressed: _markAllAbsent,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red.shade300,
@@ -441,30 +319,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAttendanceLegend() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          
-          Row(
-            children: [
-              Icon(FontAwesomeIcons.xmark, size: 12, color: Colors.red.shade300),
-              const Text(' Absent '),
-             const Icon(FontAwesomeIcons.rightLong, size: 12, color: Colors.grey),
-              const Text(' Present '),
-              Icon(FontAwesomeIcons.check, size: 12, color: Colors.green),
-              const Icon(FontAwesomeIcons.rightLong, size: 12, color: Colors.grey),
-              const Text(' Justified '),
-              Icon(FontAwesomeIcons.fileLines, size: 12, color: Colors.amber),
-            ],
           ),
         ],
       ),
@@ -494,47 +348,33 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       itemBuilder: (context, index) {
         final student = students[index];
         final studentId = int.parse(student['id'].toString());
-        final status = attendanceStatus[studentId] ?? 'absent';
-        final statusColor = _getStatusColor(status);
-        final statusIcon = _getStatusIcon(status);
+        final isPresent = attendanceStatus[studentId] ?? false;
 
-        return GestureDetector(
-          onTap: () => _toggleAttendance(studentId),
-          child: Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: statusColor.withOpacity(0.5),
-                width: 1,
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 2,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: CircleAvatar(
+              backgroundColor: Colors.cyan.shade100,
+              child: Text(
+                '${student['first_name']?[0]}${student['last_name']?[0]}',
+                style: TextStyle(color: Colors.cyan.shade800),
               ),
             ),
-            elevation: 2,
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: CircleAvatar(
-                backgroundColor: Colors.cyan.shade100,
-                child: Text(
-                  '${student['fname']?[0]}${student['name']?[0]}',
-                  style: TextStyle(color: Colors.cyan.shade800),
-                ),
-              ),
-              title: Text(
-                '${student['fname']} ${student['name']}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(student['email'] ?? 'No email'),
-              trailing: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  statusIcon,
-                  color: statusColor,
-                ),
-              ),
+            title: Text(
+              '${student['first_name']} ${student['last_name']}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(student['email'] ?? 'No email'),
+            trailing: Switch(
+              value: isPresent,
+              onChanged: (value) => _toggleAttendance(studentId, value),
+              activeColor: Colors.green,
+              activeTrackColor: Colors.green.shade100,
             ),
           ),
         );

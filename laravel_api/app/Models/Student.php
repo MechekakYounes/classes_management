@@ -12,11 +12,15 @@ class Student extends Model
         'group_id'
     ];
 
-    protected $table = 'student';
+    protected $table = 'students';
 
     public function groups()
 {
     return $this->belongsTo(Group::class);
+}
+
+public function attendances (){
+    return $this->hasMany(Attendance::class);
 }
 
 }

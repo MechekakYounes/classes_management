@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Attendance;
 
 class AttendanceController extends Controller
 {
@@ -14,23 +15,51 @@ class AttendanceController extends Controller
 
 public function store(Request $request, $sessionId)
 {
-    $data = $request->validate([
+    // Check if bulk 'attendance' data is sent
+    if ($request->has('attendance')) {
+        $attendanceList = $request->input('attendance');
+
+        foreach ($attendanceList as $attendanceData) {
+            Attendance::updateOrCreate(
+                [
+                    'session_id' => $sessionId,
+                    'student_id' => $attendanceData['student_id'],
+                ],
+                [
+                    'status' => $attendanceData['status'] ?? 'present',
+                ]
+            );
+        }
+
+        return response()->json([
+            'message' => 'Bulk attendance saved successfully!',
+            'status' => 'success'
+        ], 201);
+    }
+
+    // for single update
+    $validated = $request->validate([
         'student_id' => 'required|exists:students,id',
-        'session_id' => 'required|exists:session,id',
+        'status' => 'required|string|in:present,absent,late',
     ]);
 
-    $data['session_id'] = $sessionId;
+    $validated['session_id'] = $sessionId;
 
-    $attendance = Attendance::create($data);
+    $attendance = Attendance::create($validated);
 
     return response()->json($attendance, 201);
 }
 
+
 public function update(Request $request, $sessionId, $attendanceId)
 {
+    $validated = $request->validate([
+        'status' => 'required|string|in:present,absent,late', // or whatever statuses you support
+    ]);
+
     $attendance = Attendance::where('session_id', $sessionId)->findOrFail($attendanceId);
 
-    $attendance->update($request->only('status'));
+    $attendance->update($validated);
 
     return response()->json($attendance);
 }

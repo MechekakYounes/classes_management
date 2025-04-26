@@ -358,7 +358,7 @@ class ApiService {
   static Future<List<dynamic>> getStudentsByGroup(int groupId) async {
     try {
       // Option 1: Try this format based on how your API might be structured
-      final url = '$_baseUrl/students/by-group/$groupId';
+      final url = '$_baseUrl/students/$groupId';
 
       // Debug info
       print('Fetching students for group $groupId from URL: $url');
@@ -530,7 +530,7 @@ class ApiService {
   // Get attendance for a session
   static Future<List<dynamic>> getAttendanceBySession(int sessionId) async {
     try {
-      final url = '$_baseUrl/session/$sessionId/attendance';
+      final url = '$_baseUrl/session/$sessionId/attendances';
       final response = await http
           .get(
             Uri.parse(url),
@@ -548,7 +548,7 @@ class ApiService {
   static Future<Map<String, dynamic>> createAttendance(
       int sessionId, Map<String, dynamic> attendanceData) async {
     try {
-      final url = '$_baseUrl/session/$sessionId/attendance';
+      final url = '$_baseUrl/session/$sessionId/attendances';
 
       final formattedData = {
         'student_id': attendanceData['student_id'],
@@ -578,7 +578,7 @@ class ApiService {
   static Future<Map<String, dynamic>> updateAttendance(int sessionId,
       int attendanceId, Map<String, dynamic> attendanceData) async {
     try {
-      final url = '$_baseUrl/session/$sessionId/attendance/$attendanceId';
+      final url = '$_baseUrl/session/$sessionId/attendances/$attendanceId';
       final response = await http
           .put(
             Uri.parse(url),
@@ -600,7 +600,7 @@ class ApiService {
   // Delete attendance record
   static Future<void> deleteAttendance(int sessionId, int attendanceId) async {
     try {
-      final url = '$_baseUrl/session/$sessionId/attendance/$attendanceId';
+      final url = '$_baseUrl/session/$sessionId/attendances/$attendanceId';
       final response = await http
           .delete(
             Uri.parse(url),
@@ -620,7 +620,7 @@ class ApiService {
   static Future<Map<String, dynamic>> bulkCreateAttendance(
       int sessionId, List<Map<String, dynamic>> attendanceList) async {
     try {
-      final url = '$_baseUrl/session/$sessionId/attendance/bulk';
+      final url = '$_baseUrl/session/$sessionId/attendances';
 
       final response = await http
           .post(
