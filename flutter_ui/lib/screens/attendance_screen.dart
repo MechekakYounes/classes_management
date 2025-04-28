@@ -33,7 +33,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   static AttendanceScreen fromArguments(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     return AttendanceScreen(
       sessionId: args['sessionId'],
       groupId: args['groupId'],
@@ -52,7 +53,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       final studentsData = await ApiService.getStudentsByGroup(widget.groupId);
 
       // Load existing attendance records for this session
-      final attendanceData = await ApiService.getAttendanceBySession(widget.sessionId);
+      final attendanceData =
+          await ApiService.getAttendanceBySession(widget.sessionId);
 
       // Store the existing attendance records for later use during updates
       existingAttendanceRecords = attendanceData;
@@ -61,13 +63,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       Map<int, String> status = {};
       for (var student in studentsData) {
         int studentId = int.parse(student['id'].toString());
-        
+
         // Find if student has existing attendance record
         var existingRecord = attendanceData.firstWhere(
           (record) => int.parse(record['student_id'].toString()) == studentId,
           orElse: () => null,
         );
-        
+
         // Set status based on existing record or default to 'absent'
         if (existingRecord != null) {
           status[studentId] = existingRecord['status'] ?? 'absent';
@@ -97,7 +99,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     try {
       // Prepare attendance data
       List<Map<String, dynamic>> attendanceData = [];
-      
+
       // Build the list of attendance records from the attendance status map
       attendanceStatus.forEach((studentId, status) {
         attendanceData.add({
@@ -106,37 +108,36 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           'status': status,
         });
       });
-      
+
       print('Saving attendance for ${attendanceData.length} students');
-      
+
       // Call the bulk create/update method with the session ID and attendance data
       final result = await ApiService.bulkCreateAttendance(
-        widget.sessionId, 
-        attendanceData
-      );
-      
+          widget.sessionId, attendanceData);
+
       // Refresh attendance data after saving
       await _loadAttendanceData();
-      
+
       setState(() {
         isLoading = false;
         hasUnsavedChanges = false;
       });
-      
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? 'Attendance saved successfully'),
-          backgroundColor: result['status'] == 'partial' ? Colors.orange : Colors.green,
+          backgroundColor:
+              result['status'] == 'partial' ? Colors.orange : Colors.green,
         ),
       );
     } catch (e) {
       print('Error in _saveAttendance: $e');
-      
+
       setState(() {
         isLoading = false;
       });
-      
+
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -161,7 +162,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           attendanceStatus[studentId] = 'absent';
           break;
         default:
-          attendanceStatus[studentId] = 'absent';
+          attendanceStatus[studentId] = 'present';
       }
       hasUnsavedChanges = true;
     });
@@ -233,7 +234,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Unsaved Changes'),
-              content: const Text('You have unsaved attendance changes. Do you want to save before leaving?'),
+              content: const Text(
+                  'You have unsaved attendance changes. Do you want to save before leaving?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
@@ -271,37 +273,39 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
             : error != null
-            ? Center(child: Text('Error: $error'))
-            : Column(
-          children: [
-            _buildSessionInfo(),
-            _buildActionButtons(),
-            _buildAttendanceLegend(),
-            Expanded(
-              child: _buildStudentsList(),
-            ),
-          ],
-        ),
+                ? Center(child: Text('Error: $error'))
+                : Column(
+                    children: [
+                      _buildSessionInfo(),
+                      _buildActionButtons(),
+                      _buildAttendanceLegend(),
+                      Expanded(
+                        child: _buildStudentsList(),
+                      ),
+                    ],
+                  ),
         bottomNavigationBar: hasUnsavedChanges
             ? Container(
-          color: Colors.amber.shade100,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          child: Row(
-            children: [
-              Icon(Icons.warning, color: Colors.amber.shade800),
-              const SizedBox(width: 8),
-              Text('You have unsaved changes', style: TextStyle(color: Colors.amber.shade900)),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: _saveAttendance,
-                child: const Text('Save'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.cyan,
+                color: Colors.amber.shade100,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.amber.shade800),
+                    const SizedBox(width: 8),
+                    Text('You have unsaved changes',
+                        style: TextStyle(color: Colors.amber.shade900)),
+                    const Spacer(),
+                    ElevatedButton(
+                      onPressed: _saveAttendance,
+                      child: const Text('Save'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.cyan,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        )
+              )
             : null,
       ),
     );
@@ -309,10 +313,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   Widget _buildSessionInfo() {
     // Count the number of each status
-    int presentCount = attendanceStatus.values.where((status) => status == 'present').length;
-    int justifiedCount = attendanceStatus.values.where((status) => status == 'justified').length;
-    int absentCount = attendanceStatus.values.where((status) => status == 'absent').length;
-    
+    int presentCount =
+        attendanceStatus.values.where((status) => status == 'present').length;
+    int justifiedCount =
+        attendanceStatus.values.where((status) => status == 'justified').length;
+    int absentCount =
+        attendanceStatus.values.where((status) => status == 'absent').length;
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -453,15 +460,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          
           Row(
             children: [
-              Icon(FontAwesomeIcons.xmark, size: 12, color: Colors.red.shade300),
+              Icon(FontAwesomeIcons.xmark,
+                  size: 12, color: Colors.red.shade300),
               const Text(' Absent '),
-             const Icon(FontAwesomeIcons.rightLong, size: 12, color: Colors.grey),
+              const Icon(FontAwesomeIcons.rightLong,
+                  size: 12, color: Colors.grey),
               const Text(' Present '),
               Icon(FontAwesomeIcons.check, size: 12, color: Colors.green),
-              const Icon(FontAwesomeIcons.rightLong, size: 12, color: Colors.grey),
+              const Icon(FontAwesomeIcons.rightLong,
+                  size: 12, color: Colors.grey),
               const Text(' Justified '),
               Icon(FontAwesomeIcons.fileLines, size: 12, color: Colors.amber),
             ],
@@ -477,7 +486,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(FontAwesomeIcons.userGroup, size: 60, color: Colors.grey),
+            const Icon(FontAwesomeIcons.userGroup,
+                size: 60, color: Colors.grey),
             const SizedBox(height: 16),
             const Text(
               'No students in this group',
@@ -511,7 +521,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ),
             elevation: 2,
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: CircleAvatar(
                 backgroundColor: Colors.cyan.shade100,
                 child: Text(

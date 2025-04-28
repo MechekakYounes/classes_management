@@ -9,33 +9,26 @@ use App\Models\Student;
 
 class StudentController extends Controller
 {
-public function import(Request $request)
-{
-    $request->validate([
-        'file' => 'required|file|mimes:xls,xlsx,csv'
-    ]);
-
-    $filePath = $request->file('file')->getRealPath();
-
-    $spreadsheet = IOFactory::load($filePath);
-    $sheet = $spreadsheet->getActiveSheet();
-    $rows = $sheet->toArray();
-
-    // Assume first row is the header
-    $header = array_map('strtolower', $rows[0]);
-    unset($rows[0]);
-
-    foreach ($rows as $row) {
-        $data = array_combine($header, $row);
-
-        Student::create([
-            'fname'     => $data['family name'] ?? '',
-            'name'    => $data['name'] ?? '',
-        ]);
+    public function import(Request $request)
+    {
+        $students = $request->input('students');
+        $groupId = $request->input('group_id'); // 👈 get the group_id from the request
+    
+        if (!$groupId) {
+            return response()->json(['error' => 'group_id is required'], 422);
+        }
+    
+        foreach ($students as $studentData) {
+            Student::create([
+                'fname' => $studentData['fname'],
+                'name' => $studentData['name'],
+                'group_id' => $groupId, 
+            ]);
+        }
+    
+        return response()->json(['message' => 'Students created successfully'], 201);
     }
-
-    return response()->json(['message' => 'Students imported successfully']);
-}
+    
 
 public function index(Request $request, $groupId) {
 

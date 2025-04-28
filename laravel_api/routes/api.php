@@ -22,9 +22,9 @@ Route::middleware('api')->group(function () {
     Route::put('/classes/{classId}/groups/{groupId}', [GroupController::class, 'update']);
     Route::delete('/classes/{classId}/groups/{groupId}', [GroupController::class, 'destroy']);
 ////////////////////students/////////////////
-    Route::post('/students/import', [StudentController::class, 'import']);
+    Route::post('/students/{groupId}/import', [StudentController::class, 'import']);
     Route::get('/students/{groupId}',[StudentController::class,'index']);
-    Route::get('/students',[StudentController::class,'index']);
+    Route::get('/studentsq',[StudentController::class,'index']);
     Route::post('/students',[StudentController::class,'store']);
     Route::put('/students/{studentId}',[StudentController::class,'update']);
     Route::delete('/students/{studentId}',[StudentController::class,'destroy']);

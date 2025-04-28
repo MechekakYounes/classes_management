@@ -337,7 +337,6 @@ class ApiService {
   }
 
 ////============================STUDENTS====================================================================
-  static const String _attendanceUrl = '$_baseUrl/attendance';
   static const String _studentsUrl = '$_baseUrl/students';
   static Future<List<dynamic>> getStudents() async {
     try {
@@ -492,36 +491,25 @@ class ApiService {
   }
 
   // Import students from an Excel/CSV file
-  static Future<Map<String, dynamic>> importStudents(File file) async {
-    try {
-      // Create multipart request
-      var request =
-          http.MultipartRequest('POST', Uri.parse('$_studentsUrl/import'));
+  static Future<void> bulkCreateStudents(
+      List<dynamic> students, int groupId) async {
+    final url = '$_studentsUrl/$groupId/import';
 
-      // Add file to request
-      var fileStream = http.ByteStream(file.openRead());
-      var length = await file.length();
-      var multipartFile = http.MultipartFile(
-        'file',
-        fileStream,
-        length,
-        filename: file.path.split('/').last,
-      );
+    final body = {
+      'group_id': groupId,
+      'students': students, // students is List <dynamic>
+    };
 
-      request.files.add(multipartFile);
+    final response = await http.post(
+      Uri.parse(url),
+      headers: _headers,
+      body: json.encode(body),
+    );
 
-      // Send request
-      var streamedResponse =
-          await request.send().timeout(const Duration(seconds: 30));
-      var response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Failed to import students: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Failed to import students: $e');
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      print('Students created successfully');
+    } else {
+      throw Exception('Failed to create students: ${response.body}');
     }
   }
 

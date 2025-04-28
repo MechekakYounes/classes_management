@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../api_service.dart';
+import '../excel_service.dart';
 
 class StudentsGroupScreen extends StatefulWidget {
   final int groupId;
@@ -468,6 +469,17 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
     );
   }
 
+  void _importAndSendStudents() async {
+    try {
+      List<dynamic> students = await importExcel();
+      print('Sending ${students.length} students to the server...');
+      await ApiService.bulkCreateStudents(students, widget.groupId);
+      print('Students uploaded successfully');
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -563,6 +575,24 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                 ),
+                Spacer(),
+                ElevatedButton.icon(
+                  icon: Icon(
+                    FontAwesomeIcons.fileExcel,
+                    size: 16,
+                    color: Colors.greenAccent,
+                  ),
+                  label: Text('Import Excel File'),
+                  onPressed: _importAndSendStudents,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyan,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                )
               ],
             ),
             SizedBox(height: 16),
