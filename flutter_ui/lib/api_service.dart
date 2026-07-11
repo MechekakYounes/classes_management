@@ -3,10 +3,16 @@ import 'dart:convert';
 import 'dart:io';
 
 class ApiService {
-  static const String _baseUrl =
-      'http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
-  static const String _classesUrl = '$_baseUrl/classes';
-  static const String _groupsUrl = '$_baseUrl/groups';
+  static String _baseUrl = 'http://192.168.1.8:8000/api';
+  
+  static String get baseUrl => _baseUrl;
+  
+  static set baseUrl(String newUrl) {
+    _baseUrl = newUrl;
+  }
+
+  static String get _classesUrl => '$_baseUrl/classes';
+  static String get _groupsUrl => '$_baseUrl/groups';
 
   ///classes/{classId}/groups/{groupId}'
 
@@ -337,7 +343,7 @@ class ApiService {
   }
 
 ////============================STUDENTS====================================================================
-  static const String _studentsUrl = '$_baseUrl/students';
+  static String get _studentsUrl => '$_baseUrl/students';
   static Future<List<dynamic>> getStudents() async {
     try {
       final response = await http

@@ -1,0 +1,2 @@
+D:/Proffesor_final/Gestion project/GP_flutter/android/app/.cxx/Debug/5t495xig/x86_64/CMakeFiles/edit_cache.dir
+D:/Proffesor_final/Gestion project/GP_flutter/android/app/.cxx/Debug/5t495xig/x86_64/CMakeFiles/rebuild_cache.dir
