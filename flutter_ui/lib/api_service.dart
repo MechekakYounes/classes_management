@@ -1,18 +1,31 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'auth_service.dart';
+
+
+class ApiException implements Exception {
+  final String message;
+  final int? statusCode;
+  final dynamic errors;
+
+  ApiException({required this.message, this.statusCode, this.errors});
+
+  @override
+  String toString() {
+    return 'ApiException: $message (Status code: $statusCode, Errors: $errors)';
+  }
+}
 
 class ApiService {
-  static String _baseUrl = 'http://192.168.1.8:8000/api';
-  
-  static String get baseUrl => _baseUrl;
-  
-  static set baseUrl(String newUrl) {
-    _baseUrl = newUrl;
-  }
+  static const String _baseUrl =
+      'http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
+  static const String _classesUrl = '$_baseUrl/classes';
+  static const String _groupsUrl = '$_baseUrl/groups';
+  static const Duration timeout = Duration(seconds: 30);
 
-  static String get _classesUrl => '$_baseUrl/classes';
-  static String get _groupsUrl => '$_baseUrl/groups';
+
+
 
   ///classes/{classId}/groups/{groupId}'
 
@@ -21,6 +34,127 @@ class ApiService {
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   };
+    static Map<String, String> authHeaders(String token) {
+    return {
+      ..._headers,
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  // Helper to get headers with current token from AuthService
+  static Map<String, String> currentAuthHeaders() {
+    final token = AuthService().token;
+    if (token == null) throw Exception('User not authenticated');
+    return authHeaders(token);
+  }
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
+  // Main HTTP client
+  final http.Client _client = http.Client();
+
+  /// Login API
+  Future<Map<String, dynamic>> login({
+    required String username,
+    required String password,
+  }) async {
+    try {
+      final url = Uri.parse('$_baseUrl/login');
+      
+      final response = await _client.post(
+        url,
+        headers: _headers,
+        body: json.encode({
+          'username': username,
+          'password': password,
+        }),
+      ).timeout(timeout);
+
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Network error: $e');
+    }
+  }
+
+  /// Logout API
+  Future<void> logout(String token) async {
+    try {
+      final url = Uri.parse('$_baseUrl/logout');
+      
+      final response = await _client.post(
+        url,
+        headers: authHeaders(token),
+      ).timeout(timeout);
+
+      _handleResponse(response);
+    } catch (e) {
+      // Even if logout fails, we still want to clear local data
+      rethrow;
+    }
+  }
+
+  /// Get current user
+  Future<Map<String, dynamic>> getCurrentUser(String token) async {
+    try {
+      final url = Uri.parse('$_baseUrl/user');
+      
+      final response = await _client.get(
+        url,
+        headers: authHeaders(token),
+      ).timeout(timeout);
+
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Network error: $e');
+    }
+  }
+
+  /// Check if super admin exists (for setup)
+  Future<Map<String, dynamic>> checkSuperAdmin() async {
+    try {
+      final url = Uri.parse('$_baseUrl/check-super-admin');
+      
+      final response = await _client.get(url).timeout(timeout);
+      
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Network error: $e');
+    }
+  }
+
+  /// Setup super admin (first time only)
+  Future<Map<String, dynamic>> setupSuperAdmin({
+    required String name,
+    required String username,
+    required String password,
+    String? phone,
+  }) async {
+    try {
+      final url = Uri.parse('$_baseUrl/setup-super-admin');
+      
+      final response = await _client.post(
+        url,
+        headers: _headers,
+        body: json.encode({
+          'name': name,
+          'username': username,
+          'password': password,
+          'password_confirmation': password,
+          'phone': phone,
+        }),
+      ).timeout(timeout);
+
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Network error: $e');
+    }
+  }
+
 
   // ================================== CLASSES ===================================================================
 

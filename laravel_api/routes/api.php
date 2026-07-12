@@ -7,10 +7,17 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\CommuneController;
+use App\Http\Controllers\AuthController;
 
 
 Route::middleware('api')->group(function () {
-    ////////////////////////classes./////////////////////
+    Route::post('/login', [AuthController::class, 'login']);
+});
+
+Route::middleware(['api', 'auth:sanctum'])->group(function () {
+    ////////////////////////classes.////////////////////
+     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/classes', [ClassController::class, 'index']);
     Route::post('/classes', [ClassController::class, 'store']);
     Route::put('/classes/{id}', [ClassController::class, 'update']);

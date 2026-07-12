@@ -18,5 +18,9 @@ class Classes extends Model
 {
     return $this->hasMany(Group::class);
 }
-
+   
+    public function commune()
+   {
+    return $this->belongsTo(Commune::class);
+    }   
 }
