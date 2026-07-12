@@ -11,9 +11,10 @@ class Commune extends Model
        'name',
    ];
 
+
    public function classes()
    {
        return $this->hasMany(Classes::class);
    }
-   
+
 }

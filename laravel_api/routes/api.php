@@ -38,5 +38,12 @@ Route::middleware('api')->group(function () {
     Route::post('/session/{sessionId}/attendances', [AttendanceController::class, 'store']);
     Route::put('/session/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'update']);
     Route::delete('/session/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'destroy']);
+    //////////////////communes/////////////////////////////////////////////////////////////////////////////////
+    Route::get('/communes', [CommuneController::class, 'index']);
+    Route::post('/communes', [CommuneController::class, 'store']);
+    Route::get('/communes/{id}', [CommuneController::class, 'show']);
+    Route::put('/communes/{id}', [CommuneController::class, 'update']);
+    Route::delete('/communes/{id}', [CommuneController::class, 'destroy']);
+    
 
 });
