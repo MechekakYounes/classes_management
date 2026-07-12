@@ -477,7 +477,7 @@ class ApiService {
   }
 
 ////============================STUDENTS====================================================================
-  static const String _studentsUrl = '$_baseUrl/students';
+  static String get _studentsUrl => '$_baseUrl/students';
   static Future<List<dynamic>> getStudents() async {
     try {
       final response = await http

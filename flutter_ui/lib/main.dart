@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/student_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const ClassManagerApp());
@@ -41,7 +42,7 @@ class ClassManagerApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MainTabController(),
+      home: const LoginScreen(),
     );
   }
 }

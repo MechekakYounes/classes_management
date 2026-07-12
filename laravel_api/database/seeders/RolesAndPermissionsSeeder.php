@@ -94,7 +94,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $teacher->givePermissionTo([
             'students.view','students.create','students.edit','students.delete',
             'attendance.manage',
-            'payments.manage'
+            'payments.manage',
+            'reports.view'
         ]);
         
 
