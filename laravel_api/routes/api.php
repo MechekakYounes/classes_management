@@ -7,10 +7,17 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\CommuneController;
+use App\Http\Controllers\AuthController;
 
 
 Route::middleware('api')->group(function () {
-    ////////////////////////classes./////////////////////
+    Route::post('/login', [AuthController::class, 'login']);
+});
+
+Route::middleware(['api', 'auth:sanctum'])->group(function () {
+    ////////////////////////classes.////////////////////
+     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/classes', [ClassController::class, 'index']);
     Route::post('/classes', [ClassController::class, 'store']);
     Route::put('/classes/{id}', [ClassController::class, 'update']);
@@ -38,5 +45,12 @@ Route::middleware('api')->group(function () {
     Route::post('/session/{sessionId}/attendances', [AttendanceController::class, 'store']);
     Route::put('/session/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'update']);
     Route::delete('/session/{sessionId}/attendances/{attendanceId}', [AttendanceController::class, 'destroy']);
+    //////////////////communes/////////////////////////////////////////////////////////////////////////////////
+    Route::get('/communes', [CommuneController::class, 'index']);
+    Route::post('/communes', [CommuneController::class, 'store']);
+    Route::get('/communes/{id}', [CommuneController::class, 'show']);
+    Route::put('/communes/{id}', [CommuneController::class, 'update']);
+    Route::delete('/communes/{id}', [CommuneController::class, 'destroy']);
+    
 
 });
