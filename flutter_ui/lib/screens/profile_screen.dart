@@ -3,10 +3,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../api_service.dart' show ApiService;
 import 'login_screen.dart';
+import '../auth_service.dart' show AuthService;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
-
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -15,6 +15,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _darkMode = false;
   bool _notificationsEnabled = true;
   String _selectedLanguage = 'English';
+
+
 
   void _showLogoutDialog() {
     showDialog(
@@ -58,12 +60,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Dismiss dialog
-                // Navigate back to LoginScreen and clear stack
-                Navigator.pushReplacement(
+              onPressed: ()async {
+                Navigator.of(context).pop();
+                final success = await AuthService().logout();
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Logout Succeeded.'),
+                      backgroundColor: Colors.red.shade400,
+                    ),
+                  );
+                }
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
                 );
               },
               style: ElevatedButton.styleFrom(
