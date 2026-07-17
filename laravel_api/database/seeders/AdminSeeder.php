@@ -14,9 +14,9 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         user::create([
-            'name' => 'Admin',
-            'username' => 'admin',
-            'password' => bcrypt('admin'),
+            'name' => 'Admin User',
+            'username' => 'admin2',
+            'password' => bcrypt('admin2'),
             'phone' => '1234567890',
             'is_active' => true,
         ])->assignRole('super-admin');

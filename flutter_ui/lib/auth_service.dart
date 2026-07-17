@@ -102,11 +102,12 @@ class AuthService extends ChangeNotifier {
         username: username,
         password: password,
       );
-      
+      print('Login response: $response');
       if (response['success'] == true) {
         final data = response['data'];
         
         _token = data['token'];
+        print("TOKEN = $_token");
         _user = Map<String, dynamic>.from(data['user']);
         _permissions = List<String>.from(data['permissions'] ?? []);
         _roleName = data['role_name'];
@@ -176,19 +177,19 @@ class AuthService extends ChangeNotifier {
     return _user?['role'] == 'admin';
   }
 
-  /// Check if user is seller
-  bool isSeller() {
-    return _user?['role'] == 'seller';
+  /// Check if user is manager
+  bool isManager() {
+    return _user?['role'] == 'manager';
   }
 
-  /// Check if user is technician
-  bool isTechnician() {
-    return _user?['role'] == 'technician';
+  /// Check if user is supervisor   
+  bool isSupervisor() {
+    return _user?['role'] == 'supervisor';
   }
 
-  /// Check if user is inventory manager
-  bool isInventory() {
-    return _user?['role'] == 'inventory';
+  /// Check if user is Teacher
+  bool isTeacher() {
+    return _user?['role'] == 'teacher';
   }
 
   /// Get user's display name

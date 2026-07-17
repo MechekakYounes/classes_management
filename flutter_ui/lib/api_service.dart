@@ -18,11 +18,18 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  static const String _baseUrl =
-      'http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
+  static const String _baseUrl ='http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
   static const String _classesUrl = '$_baseUrl/classes';
   static const String _groupsUrl = '$_baseUrl/groups';
   static const Duration timeout = Duration(seconds: 30);
+
+  static String get baseUrl => _baseUrl; // Expose the base URL for external use
+  static set baseUrl(String newUrl) {
+    // This setter is for demonstration; in practice, you might want to handle this differently
+    // For example, you could store it in SharedPreferences or a config file
+    // Here, we just print the new URL for confirmation
+    print('Base URL updated to: $newUrl');
+  }
 
 
 
@@ -44,7 +51,8 @@ class ApiService {
   // Helper to get headers with current token from AuthService
   static Map<String, String> currentAuthHeaders() {
     final token = AuthService().token;
-    if (token == null) throw Exception('User not authenticated');
+    print("Current token: $token");
+    if (token == null) throw Exception('User not authenticatedddddd');
     return authHeaders(token);
   }
   static final ApiService _instance = ApiService._internal();
@@ -158,25 +166,29 @@ class ApiService {
 
   // ================================== CLASSES ===================================================================
 
-  static Future<List<dynamic>> getClasses() async {
-    try {
-      final uri = Uri.parse(_classesUrl);
-      final response = await http.get(uri).timeout(const Duration(seconds: 10));
-      return _handleResponse(response);
-    } on SocketException {
-      throw Exception('No Internet');
-    } catch (e) {
-      throw Exception('Failed to fetch classes: $e');
-    }
-  }
+static Future<List<dynamic>> getClasses() async {
+  try {
+    final uri = Uri.parse(_classesUrl);
 
+    final response = await http.get(
+      uri,
+      headers: currentAuthHeaders(),
+    ).timeout(const Duration(seconds: 10));
+
+    return _handleResponse(response);
+  } on SocketException {
+    throw Exception('No Internet');
+  } catch (e) {
+    throw Exception('Failed to fetch classes: $e');
+  }
+}
   static Future<Map<String, dynamic>> createClass(
       Map<String, dynamic> classData) async {
     try {
       final response = await http
           .post(
             Uri.parse(_classesUrl),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(classData),
           )
           .timeout(const Duration(seconds: 10));
@@ -197,7 +209,7 @@ class ApiService {
       final response = await http
           .put(
             Uri.parse('$_classesUrl/$id'),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(classData),
           )
           .timeout(const Duration(seconds: 10));

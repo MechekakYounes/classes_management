@@ -5,8 +5,10 @@ import 'screens/dashboard_screen.dart';
 import 'screens/student_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/login_screen.dart';
-
-void main() {
+import 'auth_service.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthService().init();
   runApp(const ClassManagerApp());
 }
 

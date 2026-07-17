@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart';
+import '../api_service.dart' show ApiService;
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -88,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showApiConfigDialog() {
     final TextEditingController urlController = TextEditingController(
-      text: ApiService.baseUrl,
+      text:"${ApiService.baseUrl}",
     );
 
     showDialog(

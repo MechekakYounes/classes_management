@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../login_provider.dart';
+import '../api_service.dart';
+import '../auth_service.dart';
 import '../main.dart'; // To navigate to MainTabController
 
 class LoginScreen extends StatefulWidget {
@@ -22,6 +25,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
+     // Keep API integration: auto-check login
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkLoginStatus();
+    });
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -32,6 +40,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _animationController.forward();
   }
 
+  Future<void> _checkLoginStatus() async {
+    final authService = AuthService();
+    await authService.init();
+
+    if (authService.isLoggedIn && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainTabController()),
+      );
+    }
+  }
+
+  
+
   @override
   void dispose() {
     _usernameController.dispose();
@@ -40,74 +62,106 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
+  Future<void> _handleLogin() async {
+  if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      // Simulate a small delay for premium UX feel
-      Future.delayed(const Duration(milliseconds: 1200), () {
-        if (!mounted) return;
+  setState(() {
+    _isLoading = true;
+  });
 
-        final username = _usernameController.text.trim();
-        final password = _passwordController.text;
+  try {
+    // Call your API service
+    await AuthService().login(
+      username: _usernameController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
 
-        setState(() {
-          _isLoading = false;
-        });
+    if (!mounted) return;
 
-        if (username.toLowerCase() == 'admin' && password == 'admin') {
-          // Success SnackBar
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(FontAwesomeIcons.circleCheck, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Welcome back, Admin!',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-              backgroundColor: Colors.teal.shade600,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              duration: const Duration(seconds: 2),
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Success SnackBar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              FontAwesomeIcons.circleCheck,
+              color: Colors.white,
+              size: 20,
             ),
-          );
-
-          // Navigate to main screen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainTabController()),
-          );
-        } else {
-          // Error SnackBar
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(FontAwesomeIcons.triangleExclamation, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Invalid username or password',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-                  ),
-                ],
+            const SizedBox(width: 12),
+            Text(
+              'Welcome back!',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
               ),
-              backgroundColor: Colors.red.shade400,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              duration: const Duration(seconds: 2),
             ),
-          );
-        }
-      });
+          ],
+        ),
+        backgroundColor: Colors.teal.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MainTabController(),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    String message = "Something went wrong. Please try again.";
+
+    if (e.toString().contains("401")) {
+      message = "Wrong username or password";
+    } else if (e.toString().contains("SocketException")) {
+      message = "No internet connection";
     }
-  }
 
+    // Error SnackBar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              FontAwesomeIcons.triangleExclamation,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red.shade400,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;

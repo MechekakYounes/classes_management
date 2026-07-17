@@ -17,7 +17,7 @@ Route::middleware('api')->group(function () {
 
 Route::middleware(['api', 'auth:sanctum'])->group(function () {
     ////////////////////////classes.////////////////////
-     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/classes', [ClassController::class, 'index']);
     Route::post('/classes', [ClassController::class, 'store']);
     Route::put('/classes/{id}', [ClassController::class, 'update']);
