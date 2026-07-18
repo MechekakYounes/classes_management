@@ -20,5 +20,6 @@ class AdminSeeder extends Seeder
             'phone' => '1234567890',
             'is_active' => true,
         ])->assignRole('super-admin');
+        
     }
 }
