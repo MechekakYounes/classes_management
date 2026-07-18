@@ -248,7 +248,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .get(
             Uri.parse(_groupsUrl),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -265,7 +265,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .get(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -291,7 +291,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .post(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(groupData),
           )
           .timeout(const Duration(seconds: 10));
@@ -317,7 +317,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .put(
             Uri.parse('$_baseUrl/classes/$classId/groups/$groupId'),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(groupData),
           )
           .timeout(const Duration(seconds: 10));
@@ -338,7 +338,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .delete(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -402,7 +402,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .get(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -431,7 +431,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .post(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(formattedData),
           )
           .timeout(const Duration(seconds: 10));
@@ -455,7 +455,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .put(
             Uri.parse('$_baseUrl/groups/$groupId/session/$sessionId'),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(sessionData),
           )
           .timeout(const Duration(seconds: 10));
@@ -476,7 +476,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .delete(
             Uri.parse('$_baseUrl/groups/$groupId/session/$sessionId'),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -495,7 +495,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .get(
             Uri.parse(_studentsUrl),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -517,7 +517,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .get(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -536,7 +536,7 @@ static Future<List<dynamic>> getClasses() async {
         final fallbackResponse = await http
             .get(
               Uri.parse(fallbackUrl),
-              headers: _headers,
+              headers: currentAuthHeaders(),
             )
             .timeout(const Duration(seconds: 10));
 
@@ -587,7 +587,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .post(
             Uri.parse(_studentsUrl),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(studentData),
           )
           .timeout(const Duration(seconds: 10));
@@ -609,7 +609,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .put(
             Uri.parse('$_studentsUrl/$studentId'),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(studentData),
           )
           .timeout(const Duration(seconds: 10));
@@ -630,7 +630,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .delete(
             Uri.parse('$_studentsUrl/$studentId'),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -654,7 +654,7 @@ static Future<List<dynamic>> getClasses() async {
 
     final response = await http.post(
       Uri.parse(url),
-      headers: _headers,
+      headers: currentAuthHeaders(),
       body: json.encode(body),
     );
 
@@ -674,7 +674,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .get(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -699,7 +699,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .post(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(formattedData),
           )
           .timeout(const Duration(seconds: 10));
@@ -722,7 +722,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .put(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode(attendanceData),
           )
           .timeout(const Duration(seconds: 10));
@@ -744,7 +744,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .delete(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -765,7 +765,7 @@ static Future<List<dynamic>> getClasses() async {
       final response = await http
           .post(
             Uri.parse(url),
-            headers: _headers,
+            headers: currentAuthHeaders(),
             body: json.encode({'attendance': attendanceList}),
           )
           .timeout(const Duration(seconds: 15));

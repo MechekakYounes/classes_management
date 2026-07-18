@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -55,8 +54,8 @@ class AuthController extends Controller
             'data' => [
                 'user' => $user,
                 'token' => $token,
-                //'permissions' => $user->getPermissions(),
-                'role_name' => $user->role_name,
+                'permissions' => $user->getPermissionNames()->values(),
+                'role' => $user->getRoleNames(),
             ]
         ]);
     }
@@ -66,7 +65,10 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        //AVOID ERRORS IF A TOKEN IS NOT PRESENT IN THE REQUEST
+        if ($request->user()?->currentAccessToken()) {
+            $request->user()->currentAccessToken()->delete();
+        }
 
         return response()->json([
             'success' => true,

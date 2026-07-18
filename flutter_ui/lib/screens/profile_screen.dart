@@ -61,7 +61,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             ElevatedButton(
               onPressed: ()async {
-                Navigator.of(context).pop();
                 final success = await AuthService().logout();
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
