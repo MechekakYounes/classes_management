@@ -3,6 +3,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../auth_service.dart';
 import '../main.dart'; // To navigate to MainTabController
+import '../constants/wilayas.dart';
+import 'wilaya_list_screen.dart';
+import 'baladiya_management_screen.dart';
+import 'groups_screen.dart';
+import 'sessions_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -43,14 +48,21 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     await authService.init();
 
     if (authService.isLoggedIn && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainTabController()),
-      );
+      _navigateToRoleScreen(context);
     }
   }
 
   
+
+  void _navigateToRoleScreen(BuildContext context) {
+    final authService = AuthService();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MainTabController(communeId: authService.communeId),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -68,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   });
 
   try {
-    // Call your API service
+    // Call your API serviceè
     await AuthService().login(
       username: _usernameController.text.trim(),
       password: _passwordController.text.trim(),
@@ -108,12 +120,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       ),
     );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const MainTabController(),
-      ),
-    );
+    _navigateToRoleScreen(context);
   } catch (e) {
     if (!mounted) return;
 

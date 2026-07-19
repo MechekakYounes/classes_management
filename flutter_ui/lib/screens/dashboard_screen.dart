@@ -7,6 +7,9 @@ import '../api_service.dart';
 import 'groups_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
+  final int? communeId;
+  const DashboardScreen({Key? key, this.communeId}) : super(key: key);
+
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
@@ -27,7 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Fetch classes and update filters
   Future<void> fetchClassesAndUpdateFilters() async {
     try {
-      List classes = await ApiService.getClasses();
+      List classes = await ApiService.getClasses(communeId: widget.communeId);
 
       // Extract unique specialities and years from the classes
       Set<String> specialities = Set();
@@ -59,9 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshClasses();
-    _fetchClasses();
-    _fetchClasses(); // initial load
+    _loadData();
     _searchController.addListener(() {
       setState(() {});
       specialities = classes
@@ -105,22 +106,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
     availablelevel = Set.from(levels);
   }
 
-  Future<void> _refreshClasses() async {
+  Future<void> _loadData() async {
     setState(() {
       isLoading = true;
       error = null;
     });
 
     try {
-      classes = await ApiService.getClasses();
-      _filteredClasses = List.from(classes);
-    } catch (e) {
-      error = e.toString();
-    }
+      final fetchedClasses = await ApiService.getClasses(communeId: widget.communeId);
+      final convertedClasses = fetchedClasses.map<Map<dynamic, dynamic>>((cls) {
+        return Map<dynamic, dynamic>.from(cls).map(
+            (key, value) => MapEntry(key.toString(), value?.toString() ?? ''));
+      }).toList();
 
-    setState(() {
-      isLoading = false;
-    });
+      setState(() {
+        classes = fetchedClasses;
+        _allClasses = convertedClasses;
+        _filteredClasses = List.from(_allClasses);
+        fetchFilterOptions();
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+      print('Error loading classes: $e');
+    }
   }
 
   void _confirmDelete(int id) {
@@ -138,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Navigator.pop(context);
               try {
                 await ApiService.deleteClass(id);
-                _refreshClasses();
+                _loadData();
               } catch (e) {
                 // Show error to user
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -202,7 +214,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 int classId = int.tryParse(classToEdit['id'].toString()) ?? 0;
                 if (classId != 0) {
                   await ApiService.updateClass(classId, updatedData);
-                  _refreshClasses();
+                  _loadData();
                   Navigator.pop(context);
                 }
               },
@@ -213,24 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Future<void> _fetchClasses() async {
-    final classes = await ApiService.getClasses();
 
-    // Debugging output
-
-    final convertedClasses = classes.map<Map<dynamic, dynamic>>((cls) {
-      return cls.map(
-          (key, value) => MapEntry(key.toString(), value?.toString() ?? ''));
-    }).toList();
-
-    // Debugging output
-
-    setState(() {
-      _allClasses = convertedClasses;
-      _filteredClasses = List.from(_allClasses);
-      fetchFilterOptions(); // Update filters after data refresh
-    });
-  }
 
   void _applyFiltersclass() {
     List<Map<dynamic, dynamic>> temp = _allClasses.where((cls) {
@@ -618,17 +613,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
+                                              if (cls['speciality'] != null && cls['speciality'].toString().isNotEmpty)
+                                                Text(
+                                                  'التخصص: ${cls['speciality']}',
+                                                  style: const TextStyle(fontSize: 14),
+                                                ),
+                                              if (cls['semester'] != null && cls['semester'].toString().isNotEmpty)
+                                                Text(
+                                                  'الفصل: ${cls['semester']}',
+                                                  style: const TextStyle(fontSize: 14),
+                                                ),
                                               Text(
-                                                'Speciality: ${cls['speciality']}',
-                                                style: TextStyle(fontSize: 14),
-                                              ),
-                                              Text(
-                                                'semester: ${cls['semester']}',
-                                                style: TextStyle(fontSize: 14),
-                                              ),
-                                              Text(
-                                                'Year: ${cls['year']}',
-                                                style: TextStyle(fontSize: 14),
+                                                'السنة: ${cls['year']}',
+                                                style: const TextStyle(fontSize: 14),
                                               ),
                                             ],
                                           ),
@@ -746,10 +743,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   'level': _levelController.text,
                   'semester': _semesterController.text,
                   'year': _yearController.text,
+                  'commune_id': widget.communeId,
                 };
 
                 await ApiService.createClass(newClass);
-                _refreshClasses();
+                _loadData();
                 Navigator.pop(context);
               },
             ),

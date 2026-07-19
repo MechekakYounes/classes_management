@@ -10,9 +10,13 @@ class CommuneController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $communes = Commune::all();
+        $query = Commune::query();
+        if ($request->has('wilaya_id')) {
+            $query->where('wilaya_id', $request->query('wilaya_id'));
+        }
+        $communes = $query->get();
         return response()->json($communes);
     }
 
@@ -31,6 +35,7 @@ class CommuneController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'wilaya_id' => 'required|integer',
         ]);
 
         $commune = Commune::create($validated);
@@ -73,6 +78,7 @@ class CommuneController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'wilaya_id' => 'required|integer',
         ]);
 
         $commune->update($validated);

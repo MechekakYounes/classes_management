@@ -5,7 +5,13 @@ import 'screens/dashboard_screen.dart';
 import 'screens/student_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/wilaya_list_screen.dart';
+import 'screens/baladiya_management_screen.dart';
+import 'screens/groups_screen.dart';
+import 'screens/sessions_screen.dart';
 import 'auth_service.dart';
+import 'constants/wilayas.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AuthService().init();
@@ -50,7 +56,8 @@ class ClassManagerApp extends StatelessWidget {
 }
 
 class MainTabController extends StatefulWidget {
-  const MainTabController({super.key});
+  final int? communeId;
+  const MainTabController({super.key, this.communeId});
 
   @override
   State<MainTabController> createState() => _MainTabControllerState();
@@ -58,17 +65,67 @@ class MainTabController extends StatefulWidget {
 
 class _MainTabControllerState extends State<MainTabController> {
   int _selectedIndex = 0;
+  late final List<Widget> _screens;
+  final GlobalKey<NavigatorState> _dashboardNavigatorKey = GlobalKey<NavigatorState>();
 
-  final List<Widget> _screens = [
-    DashboardScreen(),
-    StudentsScreen(),
-    ProfileScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    final auth = AuthService();
+    Widget dashboardWidget;
+
+    if (widget.communeId != null) {
+      dashboardWidget = DashboardScreen(communeId: widget.communeId);
+    } else if (auth.isSuperAdmin()) {
+      dashboardWidget = const WilayaListScreen();
+    } else if (auth.isAdmin()) {
+      final wilayaId = auth.wilayaId ?? 16;
+      dashboardWidget = BaladiyaManagementScreen(
+        wilayaId: wilayaId,
+        wilayaName: auth.wilayaName ?? "الجزائر",
+      );
+    } else if (auth.isSupervisor()) {
+      dashboardWidget = DashboardScreen(communeId: auth.communeId ?? widget.communeId);
+    } else if (auth.isManager()) {
+      dashboardWidget = GroupsScreen(
+        className: auth.user?['class']?['name'] ?? "المدرسة المعينة",
+        classId: auth.classId ?? 1,
+      );
+    } else if (auth.isTeacher()) {
+      dashboardWidget = SessionScreen(
+        groupId: auth.groupId ?? 1,
+        groupName: auth.user?['group']?['name'] ?? "القسم المعين",
+      );
+    } else {
+      dashboardWidget = DashboardScreen(communeId: widget.communeId);
+    }
+
+    _screens = [
+      Navigator(
+        key: _dashboardNavigatorKey,
+        onGenerateRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => dashboardWidget,
+            settings: settings,
+          );
+        },
+      ),
+      const StudentsScreen(),
+      const ProfileScreen(),
+    ];
+  }
 
   void _onTabTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index == 0) {
+      _dashboardNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+      setState(() {
+        _selectedIndex = 0;
+      });
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   @override

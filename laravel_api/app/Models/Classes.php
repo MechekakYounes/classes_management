@@ -11,7 +11,8 @@ class Classes extends Model
         'speciality',
         'level',
         'year',
-        'semester'
+        'semester',
+        'commune_id',
     ];
 
     public function groups()

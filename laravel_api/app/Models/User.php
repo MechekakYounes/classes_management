@@ -19,6 +19,16 @@ class User extends Authenticatable
         'password',
         'phone',
         'is_active',
+        'role_name',
+        'wilaya_id',
+        'commune_id',
+        'class_id',
+        'group_id',
+    ];
+
+    protected $appends = [
+        'wilaya_name',
+        'commune_name',
     ];
 
     protected $hidden = [
@@ -49,5 +59,23 @@ class User extends Authenticatable
             ->orWhere('phone', 'like', "%{$search}%");
     }
 
-    
+    public function wilaya()
+    {
+        return $this->belongsTo(Wilaya::class);
+    }
+
+    public function commune()
+    {
+        return $this->belongsTo(Commune::class);
+    }
+
+    public function getWilayaNameAttribute()
+    {
+        return $this->wilaya ? $this->wilaya->name : null;
+    }
+
+    public function getCommuneNameAttribute()
+    {
+        return $this->commune ? $this->commune->name : null;
+    }
 }
