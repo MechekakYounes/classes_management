@@ -10,9 +10,13 @@ class ClassController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {   
-        $classes= Classes::all();
+        $query = Classes::query();
+        if ($request->has('commune_id')) {
+            $query->where('commune_id', $request->query('commune_id'));
+        }
+        $classes = $query->get();
         return response()->json($classes);
     }
 
@@ -28,17 +32,18 @@ class ClassController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    { // validation here dont forget !!!!!! 
-    $class = new Classes();
-    $class->name = $request->input('name');
-    $class->speciality = $request->input('speciality');
-    $class->level = $request->input('level');
-    $class->year = $request->input('year');
-    $class->semester = $request->input('semester');
-    
-    $class->save();
+    { 
+        $class = new Classes();
+        $class->name = $request->input('name');
+        $class->speciality = $request->input('speciality');
+        $class->level = $request->input('level');
+        $class->year = $request->input('year');
+        $class->semester = $request->input('semester');
+        $class->commune_id = $request->input('commune_id');
+        
+        $class->save();
 
-    return response()->json($class, 201);
+        return response()->json($class, 201);
     }
 
     /**

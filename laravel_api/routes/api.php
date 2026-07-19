@@ -18,6 +18,16 @@ Route::middleware('api')->group(function () {
 Route::middleware(['api', 'auth:sanctum'])->group(function () {
     ////////////////////////classes.////////////////////
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', function (Request $request) {
+        $user = $request->user();
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user' => $user,
+                'role_name' => $user->role_name,
+            ]
+        ]);
+    });
     Route::get('/classes', [ClassController::class, 'index']);
     Route::post('/classes', [ClassController::class, 'store']);
     Route::put('/classes/{id}', [ClassController::class, 'update']);

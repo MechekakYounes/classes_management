@@ -243,8 +243,159 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildRoleSettings(AuthService auth) {
+    String title = '';
+    List<Widget> items = [];
+
+    if (auth.isSuperAdmin()) {
+      title = 'إدارة النظام (SUPER-ADMIN)';
+      items = [
+        _buildSettingTile(
+          icon: FontAwesomeIcons.usersGear,
+          title: 'إدارة حسابات المشرفين الولائيين',
+          subtitle: 'إضافة وتعديل وصلاحيات المشرفين بالولايات',
+          onTap: () {},
+        ),
+        const Divider(height: 1),
+        _buildSettingTile(
+          icon: FontAwesomeIcons.sliders,
+          title: 'ثوابت النظام العامة',
+          subtitle: 'إعدادات المنظومة والخيارات الافتراضية',
+          onTap: () {},
+        ),
+        const Divider(height: 1),
+        _buildSettingTile(
+          icon: FontAwesomeIcons.fileContract,
+          title: 'سجلات الوصول الكاملة',
+          subtitle: 'سجل عمليات المستخدمين والنشاطات والولوج',
+          onTap: () {},
+        ),
+      ];
+    } else if (auth.isAdmin()) {
+      title = 'إدارة الولاية (ADMIN)';
+      items = [
+        _buildSettingTile(
+          icon: FontAwesomeIcons.usersViewfinder,
+          title: 'إدارة المشرفين والمدراء بالولاية',
+          subtitle: 'التحكم في حسابات المشرفين البلديين ومدراء المدارس',
+          onTap: () {},
+        ),
+      ];
+    } else if (auth.isSupervisor()) {
+      title = 'إدارة البلدية (SUPERVISOR)';
+      items = [
+        _buildSettingTile(
+          icon: FontAwesomeIcons.compass,
+          title: 'تعديل نطاق الإشراف البلدي',
+          subtitle: 'ضبط حدود وتوزيع المدارس بالبلدية',
+          onTap: () {},
+        ),
+        const Divider(height: 1),
+        _buildSettingTile(
+          icon: FontAwesomeIcons.clipboardCheck,
+          title: 'سجلات مراقبة تعيين المدارس',
+          subtitle: 'متابعة تعيينات المدارس وتحديثاتها المستمرة',
+          onTap: () {},
+        ),
+      ];
+    } else if (auth.isManager()) {
+      title = 'إعدادات المؤسسة (MANAGER)';
+      items = [
+        _buildSettingTile(
+          icon: FontAwesomeIcons.school,
+          title: 'بيانات ملف المدرسة',
+          subtitle: 'تعديل معلومات وتفاصيل المجمع المدرسي',
+          onTap: () {},
+        ),
+        const Divider(height: 1),
+        _buildSettingTile(
+          icon: FontAwesomeIcons.stopwatch,
+          title: 'تهيئة مؤقتات الحصص',
+          subtitle: 'ضبط توقيتات الحصص الدراسية وفترات الراحة',
+          onTap: () {},
+        ),
+        const Divider(height: 1),
+        _buildSettingTile(
+          icon: FontAwesomeIcons.chalkboardTeacher,
+          title: 'ربط وتعيين المعلمين',
+          subtitle: 'تعيين الأساتذة للأفواج والمجموعات التعليمية',
+          onTap: () {},
+        ),
+      ];
+    } else if (auth.isTeacher()) {
+      title = 'إعدادات المعلم (TEACHER)';
+      items = [
+        _buildSettingTile(
+          icon: FontAwesomeIcons.userPen,
+          title: 'تهيئة الملف الشخصي',
+          subtitle: 'تحديث بياناتك الشخصية والمهنية',
+          onTap: () {},
+        ),
+        const Divider(height: 1),
+        _buildSettingTile(
+          icon: FontAwesomeIcons.shieldHalved,
+          title: 'الإعدادات الأمنية وكلمة المرور',
+          subtitle: 'تغيير كلمة المرور وتأمين حسابك الشخصي',
+          onTap: () {},
+        ),
+      ];
+    }
+
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(title),
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 3,
+          child: Column(
+            children: items,
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildSettingTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.cyan, size: 20),
+      title: Text(title, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500)),
+      subtitle: Text(subtitle, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600)),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+      onTap: onTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auth = AuthService();
+    final displayName = auth.getDisplayName();
+    final username = auth.getUsername();
+    final roleText = auth.isSuperAdmin()
+        ? 'مشرف وطني شامل'
+        : auth.isAdmin()
+            ? 'مشرف ولائي'
+            : auth.isSupervisor()
+                ? 'مشرف بلدي'
+                : auth.isManager()
+                    ? 'مدير مدرسة'
+                    : auth.isTeacher()
+                        ? 'مدرس'
+                        : 'مستخدم';
+    final initials = displayName.isNotEmpty
+        ? displayName.trim().split(' ').map((l) => l[0]).take(2).join('').toUpperCase()
+        : 'US';
+
     return Scaffold(
       backgroundColor: const Color(0xFFE0F7FA), // Light cyan background
       appBar: AppBar(
@@ -286,7 +437,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         radius: 45,
                         backgroundColor: Colors.cyan.shade100,
                         child: Text(
-                          'AD',
+                          initials,
                           style: GoogleFonts.poppins(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -297,7 +448,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'System Administrator',
+                      displayName,
                       style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -306,7 +457,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'admin@classmanager.local',
+                      '$roleText - @$username',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.white70,
@@ -323,6 +474,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 10),
+
+                  // Dynamic Role Settings
+                  _buildRoleSettings(auth),
                   
                   // SECTION: Preferences
                   _buildSectionHeader('PREFERENCES'),

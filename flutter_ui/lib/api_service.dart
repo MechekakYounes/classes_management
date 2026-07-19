@@ -18,7 +18,7 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  static const String _baseUrl ='http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
+  static const String _baseUrl ='http://192.168.1.8:8000/api'; //http://10.0.2.2:8000/api/classes
   static const String _classesUrl = '$_baseUrl/classes';
   static const String _groupsUrl = '$_baseUrl/groups';
   static const Duration timeout = Duration(seconds: 30);
@@ -41,7 +41,7 @@ class ApiService {
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   };
-    static Map<String, String> authHeaders(String token) {
+  static Map<String, String> authHeaders(String token) {
     return {
       ..._headers,
       'Authorization': 'Bearer $token',
@@ -69,7 +69,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$_baseUrl/login');
-      
+
       final response = await _client.post(
         url,
         headers: _headers,
@@ -90,7 +90,7 @@ class ApiService {
   Future<void> logout(String token) async {
     try {
       final url = Uri.parse('$_baseUrl/logout');
-      
+
       final response = await _client.post(
         url,
         headers: authHeaders(token),
@@ -107,7 +107,7 @@ class ApiService {
   Future<Map<String, dynamic>> getCurrentUser(String token) async {
     try {
       final url = Uri.parse('$_baseUrl/user');
-      
+
       final response = await _client.get(
         url,
         headers: authHeaders(token),
@@ -124,9 +124,9 @@ class ApiService {
   Future<Map<String, dynamic>> checkSuperAdmin() async {
     try {
       final url = Uri.parse('$_baseUrl/check-super-admin');
-      
+
       final response = await _client.get(url).timeout(timeout);
-      
+
       return _handleResponse(response);
     } catch (e) {
       if (e is ApiException) rethrow;
@@ -143,7 +143,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$_baseUrl/setup-super-admin');
-      
+
       final response = await _client.post(
         url,
         headers: _headers,
@@ -166,31 +166,100 @@ class ApiService {
 
   // ================================== CLASSES ===================================================================
 
-static Future<List<dynamic>> getClasses() async {
-  try {
-    final uri = Uri.parse(_classesUrl);
+  static Future<List<dynamic>> getClasses({int? communeId}) async {
+    try {
+      final urlStr = communeId != null ? '$_classesUrl?commune_id=$communeId' : _classesUrl;
+      final uri = Uri.parse(urlStr);
 
-    final response = await http.get(
-      uri,
-      headers: currentAuthHeaders(),
-    ).timeout(const Duration(seconds: 10));
+      final response = await http.get(
+        uri,
+        headers: currentAuthHeaders(),
+      ).timeout(const Duration(seconds: 10));
 
-    return _handleResponse(response);
-  } on SocketException {
-    throw Exception('No Internet');
-  } catch (e) {
-    throw Exception('Failed to fetch classes: $e');
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('No Internet');
+    } catch (e) {
+      throw Exception('Failed to fetch classes: $e');
+    }
   }
-}
+
+  // ================================== COMMUNES ===================================================================
+  static const String _communesUrl = '$_baseUrl/communes';
+
+  static Future<List<dynamic>> getCommunesByWilaya(int wilayaId) async {
+    try {
+      final uri = Uri.parse('$_communesUrl?wilaya_id=$wilayaId');
+      final response = await http.get(
+        uri,
+        headers: currentAuthHeaders(),
+      ).timeout(const Duration(seconds: 10));
+
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Failed to fetch communes: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createCommune(Map<String, dynamic> communeData) async {
+    try {
+      final response = await http.post(
+        Uri.parse(_communesUrl),
+        headers: currentAuthHeaders(),
+        body: json.encode(communeData),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to create commune: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to create commune: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateCommune(int communeId, Map<String, dynamic> communeData) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$_communesUrl/$communeId'),
+        headers: currentAuthHeaders(),
+        body: json.encode(communeData),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to update commune: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to update commune: $e');
+    }
+  }
+
+  static Future<void> deleteCommune(int communeId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$_communesUrl/$communeId'),
+        headers: currentAuthHeaders(),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete commune: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete commune: $e');
+    }
+  }
   static Future<Map<String, dynamic>> createClass(
       Map<String, dynamic> classData) async {
     try {
       final response = await http
           .post(
-            Uri.parse(_classesUrl),
-            headers: currentAuthHeaders(),
-            body: json.encode(classData),
-          )
+        Uri.parse(_classesUrl),
+        headers: currentAuthHeaders(),
+        body: json.encode(classData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
@@ -208,10 +277,10 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .put(
-            Uri.parse('$_classesUrl/$id'),
-            headers: currentAuthHeaders(),
-            body: json.encode(classData),
-          )
+        Uri.parse('$_classesUrl/$id'),
+        headers: currentAuthHeaders(),
+        body: json.encode(classData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -228,9 +297,9 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .delete(
-            Uri.parse('$_classesUrl/$id'),
-            headers: _headers,
-          )
+        Uri.parse('$_classesUrl/$id'),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 204) {
@@ -247,9 +316,9 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .get(
-            Uri.parse(_groupsUrl),
-            headers: _headers,
-          )
+        Uri.parse(_groupsUrl),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       return _handleGroupResponse(response);
@@ -264,14 +333,13 @@ static Future<List<dynamic>> getClasses() async {
       final url = '$_baseUrl/classes/$stringId/groups';
       final response = await http
           .get(
-            Uri.parse(url),
-            headers: _headers,
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       final data = _handleResponse(response);
 
-      // Assuming your API returns { "status": "...", "data": [...] }
       if (data is Map<String, dynamic> && data.containsKey('data')) {
         return data['data'];
       } else {
@@ -290,10 +358,10 @@ static Future<List<dynamic>> getClasses() async {
 
       final response = await http
           .post(
-            Uri.parse(url),
-            headers: _headers,
-            body: json.encode(groupData),
-          )
+        Uri.parse(url),
+        headers:  currentAuthHeaders(),
+        body: json.encode(groupData),
+      )
           .timeout(const Duration(seconds: 10));
 
       print('Response status: ${response.statusCode}');
@@ -316,10 +384,10 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .put(
-            Uri.parse('$_baseUrl/classes/$classId/groups/$groupId'),
-            headers: _headers,
-            body: json.encode(groupData),
-          )
+        Uri.parse('$_baseUrl/classes/$classId/groups/$groupId'),
+        headers:  currentAuthHeaders(),
+        body: json.encode(groupData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -337,9 +405,9 @@ static Future<List<dynamic>> getClasses() async {
       final url = '$_baseUrl/classes/$classId/groups/$groupId';
       final response = await http
           .delete(
-            Uri.parse(url),
-            headers: _headers,
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 204) {
@@ -401,9 +469,9 @@ static Future<List<dynamic>> getClasses() async {
       final url = '$_baseUrl/groups/$groupId/session';
       final response = await http
           .get(
-            Uri.parse(url),
-            headers: _headers,
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       return _handleResponse(response);
@@ -430,10 +498,10 @@ static Future<List<dynamic>> getClasses() async {
 
       final response = await http
           .post(
-            Uri.parse(url),
-            headers: _headers,
-            body: json.encode(formattedData),
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+        body: json.encode(formattedData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201 || response.statusCode == 200) {
@@ -454,10 +522,10 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .put(
-            Uri.parse('$_baseUrl/groups/$groupId/session/$sessionId'),
-            headers: _headers,
-            body: json.encode(sessionData),
-          )
+        Uri.parse('$_baseUrl/groups/$groupId/session/$sessionId'),
+        headers: currentAuthHeaders(),
+        body: json.encode(sessionData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -475,9 +543,9 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .delete(
-            Uri.parse('$_baseUrl/groups/$groupId/session/$sessionId'),
-            headers: _headers,
-          )
+        Uri.parse('$_baseUrl/groups/$groupId/session/$sessionId'),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 204) {
@@ -494,9 +562,9 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .get(
-            Uri.parse(_studentsUrl),
-            headers: _headers,
-          )
+        Uri.parse(_studentsUrl),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       return _handleResponse(response);
@@ -516,9 +584,9 @@ static Future<List<dynamic>> getClasses() async {
 
       final response = await http
           .get(
-            Uri.parse(url),
-            headers: _headers,
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       // More debug info
@@ -535,9 +603,9 @@ static Future<List<dynamic>> getClasses() async {
 
         final fallbackResponse = await http
             .get(
-              Uri.parse(fallbackUrl),
-              headers: _headers,
-            )
+          Uri.parse(fallbackUrl),
+          headers: currentAuthHeaders(),
+        )
             .timeout(const Duration(seconds: 10));
 
         return _handleResponse(fallbackResponse);
@@ -555,7 +623,7 @@ static Future<List<dynamic>> getClasses() async {
         // Filter students by group_id
         return allStudents
             .where((student) =>
-                student['group_id'].toString() == groupId.toString())
+        student['group_id'].toString() == groupId.toString())
             .toList();
       } catch (fallbackError) {
         print('Fallback approach also failed: $fallbackError');
@@ -569,9 +637,9 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .get(
-            Uri.parse('$_studentsUrl/$studentId'),
-            headers: _headers,
-          )
+        Uri.parse('$_studentsUrl/$studentId'),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       return _handleResponse(response);
@@ -586,10 +654,10 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .post(
-            Uri.parse(_studentsUrl),
-            headers: _headers,
-            body: json.encode(studentData),
-          )
+        Uri.parse(_studentsUrl),
+        headers: currentAuthHeaders(),
+        body: json.encode(studentData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
@@ -608,10 +676,10 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .put(
-            Uri.parse('$_studentsUrl/$studentId'),
-            headers: _headers,
-            body: json.encode(studentData),
-          )
+        Uri.parse('$_studentsUrl/$studentId'),
+        headers: currentAuthHeaders(),
+        body: json.encode(studentData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -629,9 +697,9 @@ static Future<List<dynamic>> getClasses() async {
     try {
       final response = await http
           .delete(
-            Uri.parse('$_studentsUrl/$studentId'),
-            headers: _headers,
-          )
+        Uri.parse('$_studentsUrl/$studentId'),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 204) {
@@ -654,7 +722,7 @@ static Future<List<dynamic>> getClasses() async {
 
     final response = await http.post(
       Uri.parse(url),
-      headers: _headers,
+      headers: currentAuthHeaders(),
       body: json.encode(body),
     );
 
@@ -673,9 +741,9 @@ static Future<List<dynamic>> getClasses() async {
       final url = '$_baseUrl/session/$sessionId/attendances';
       final response = await http
           .get(
-            Uri.parse(url),
-            headers: _headers,
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       return _handleResponse(response);
@@ -698,10 +766,10 @@ static Future<List<dynamic>> getClasses() async {
 
       final response = await http
           .post(
-            Uri.parse(url),
-            headers: _headers,
-            body: json.encode(formattedData),
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+        body: json.encode(formattedData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
@@ -721,10 +789,10 @@ static Future<List<dynamic>> getClasses() async {
       final url = '$_baseUrl/session/$sessionId/attendances/$attendanceId';
       final response = await http
           .put(
-            Uri.parse(url),
-            headers: _headers,
-            body: json.encode(attendanceData),
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+        body: json.encode(attendanceData),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -743,9 +811,9 @@ static Future<List<dynamic>> getClasses() async {
       final url = '$_baseUrl/session/$sessionId/attendances/$attendanceId';
       final response = await http
           .delete(
-            Uri.parse(url),
-            headers: _headers,
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+      )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 204) {
@@ -764,10 +832,10 @@ static Future<List<dynamic>> getClasses() async {
 
       final response = await http
           .post(
-            Uri.parse(url),
-            headers: _headers,
-            body: json.encode({'attendance': attendanceList}),
-          )
+        Uri.parse(url),
+        headers: currentAuthHeaders(),
+        body: json.encode({'attendance': attendanceList}),
+      )
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 201 || response.statusCode == 200) {

@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('classes', function (Blueprint $table) {
-            $table->id();
+        Schema::create('wilayas', function (Blueprint $table) {
+            $table->id(); // Will represent Wilaya Code (1 to 58)
             $table->string('name');
-            $table->string('speciality')->nullable();
-            $table->string('level')->nullable();
-            $table->string('year');
-            $table->string('semester')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('classes');
+        Schema::dropIfExists('wilayas');
     }
 };

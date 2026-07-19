@@ -9,6 +9,7 @@ class Commune extends Model
    protected $table = 'communes';
    protected $fillable = [
        'name',
+       'wilaya_id',
    ];
 
 
