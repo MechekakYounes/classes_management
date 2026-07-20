@@ -193,6 +193,7 @@ class AuthService extends ChangeNotifier {
 
       // تأمين جلب البيانات سواء كانت داخل حقل data أو في جذر الـ response مباشرة
       final responseData = response['data'] ?? response;
+      final roles = List<String>.from(responseData['role'] ?? []);
 
       // استخراج التوكن بشكل مرن وحفظه فوراً في الذاكرة
       _token = responseData['token'];
@@ -205,7 +206,7 @@ class AuthService extends ChangeNotifier {
       if (_token != null) {
         _user = Map<String, dynamic>.from(responseData['user'] ?? {});
         _permissions = List<String>.from(responseData['permissions'] ?? []);
-        _roleName = responseData['role_name'];
+        _roleName = roles.isNotEmpty ? roles.first : null;
         _extractScopingInfo();
 
         await _saveToStorage();
@@ -227,7 +228,6 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       print('Logout API error (ignoring to clear local): $e');
     } finally {
-      // التنظيف يتم دائماً في النهاية لضمان تصفير الذاكرة فوراً
       await _clearStorage();
       notifyListeners();
     }
@@ -241,10 +241,12 @@ class AuthService extends ChangeNotifier {
     try {
       final response = await _apiService.getCurrentUser(_token!);
       final responseData = response['data'] ?? response;
+      final roles = List<String>.from(responseData['role'] ?? []);
+
 
       _user = Map<String, dynamic>.from(responseData['user'] ?? {});
       _permissions = List<String>.from(responseData['permissions'] ?? []);
-      _roleName = responseData['role_name'];
+      _roleName = roles.isNotEmpty ? roles.first : null;
       _extractScopingInfo();
 
       await _saveToStorage();
@@ -259,30 +261,16 @@ class AuthService extends ChangeNotifier {
     return _permissions?.contains(permission) ?? false;
   }
 
-  /// Check if user is super admin
-  bool isSuperAdmin() {
-    return _roleName == 'super-admin' || _roleName == 'super_admin' || _user?['role'] == 'super_admin';
-  }
 
-  /// Check if user is admin
-  bool isAdmin() {
-    return _roleName == 'admin' || _user?['role'] == 'admin';
-  }
+bool isSuperAdmin() => _roleName == 'super-admin';
 
-  /// Check if user is manager
-  bool isManager() {
-    return _roleName == 'manager' || _user?['role'] == 'manager';
-  }
+bool isAdmin() => _roleName == 'admin';
 
-  /// Check if user is supervisor   
-  bool isSupervisor() {
-    return _roleName == 'supervisor' || _user?['role'] == 'supervisor';
-  }
+bool isManager() => _roleName == 'manager';
 
-  /// Check if user is Teacher
-  bool isTeacher() {
-    return _roleName == 'teacher' || _user?['role'] == 'teacher';
-  }
+bool isSupervisor() => _roleName == 'supervisor';
+
+bool isTeacher() => _roleName == 'teacher';
 
   /// Get user's display name
   String getDisplayName() {
@@ -298,4 +286,6 @@ class AuthService extends ChangeNotifier {
   String getPhone() {
     return _user?['phone'] ?? '';
   }
+
+  
 }

@@ -73,12 +73,13 @@ class _MainTabControllerState extends State<MainTabController> {
     final auth = AuthService();
     Widget dashboardWidget;
 
-    if (widget.communeId != null) {
-      dashboardWidget = DashboardScreen(communeId: widget.communeId);
-    } else if (auth.isSuperAdmin()) {
+    if (auth.isSuperAdmin()) {
+      print("User is Super Admin, showing Wilaya List Screen");
       dashboardWidget = const WilayaListScreen();
+    } else if (widget.communeId != null) {
+      dashboardWidget =DashboardScreen(communeId: widget.communeId);
     } else if (auth.isAdmin()) {
-      final wilayaId = auth.wilayaId ?? 16;
+      final wilayaId = auth.wilayaId ?? 0;
       dashboardWidget = BaladiyaManagementScreen(
         wilayaId: wilayaId,
         wilayaName: auth.wilayaName ?? "الجزائر",

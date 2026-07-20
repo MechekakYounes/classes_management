@@ -72,13 +72,15 @@ class _WilayaListScreenState extends State<WilayaListScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.of(context).pop();
-                await AuthService().logout();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                );
+                final success = await AuthService().logout();
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('تم تسجيل الخروج بنجاح', style: GoogleFonts.poppins()),
+                      backgroundColor: Colors.red.shade400,
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade500),
               child: const Text('تسجيل خروج'),
