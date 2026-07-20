@@ -45,7 +45,6 @@ class AdminSeeder extends Seeder
             'password' => bcrypt('superadmin'),
             'phone' => '0555000001',
             'is_active' => true,
-            'role_name' => 'super-admin',
         ])->assignRole('super-admin');
         
 
@@ -56,7 +55,6 @@ class AdminSeeder extends Seeder
             'password' => bcrypt('admin'),
             'phone' => '0555000002',
             'is_active' => true,
-            'role_name' => 'admin',
             'wilaya_id' => 16,
         ])->assignRole('admin');
 
@@ -67,7 +65,6 @@ class AdminSeeder extends Seeder
             'password' => bcrypt('supervisor'),
             'phone' => '0555000003',
             'is_active' => true,
-            'role_name' => 'supervisor',
             'wilaya_id' => 16,
             'commune_id' => $commune->id,
         ])->assignRole('supervisor');
@@ -79,7 +76,6 @@ class AdminSeeder extends Seeder
             'password' => bcrypt('manager'),
             'phone' => '0555000004',
             'is_active' => true,
-            'role_name' => 'manager',
             'wilaya_id' => 16,
             'commune_id' => $commune->id,
             'class_id' => $school->id,
@@ -92,7 +88,6 @@ class AdminSeeder extends Seeder
             'password' => bcrypt('teacher'),
             'phone' => '0555000005',
             'is_active' => true,
-            'role_name' => 'teacher',
             'wilaya_id' => 16,
             'commune_id' => $commune->id,
             'class_id' => $school->id,

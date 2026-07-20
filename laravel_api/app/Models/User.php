@@ -19,7 +19,6 @@ class User extends Authenticatable
         'password',
         'phone',
         'is_active',
-        'role_name',
         'wilaya_id',
         'commune_id',
         'class_id',

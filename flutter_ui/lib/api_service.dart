@@ -18,7 +18,7 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  static const String _baseUrl ='http://192.168.1.8:8000/api'; //http://10.0.2.2:8000/api/classes
+  static const String _baseUrl ='http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
   static const String _classesUrl = '$_baseUrl/classes';
   static const String _groupsUrl = '$_baseUrl/groups';
   static const Duration timeout = Duration(seconds: 30);
@@ -471,11 +471,7 @@ class ApiService {
           .get(
             Uri.parse(url),
             headers: currentAuthHeaders(),
-          )
-        Uri.parse(url),
-        headers: currentAuthHeaders(),
-      )
-          .timeout(const Duration(seconds: 10));
+          ).timeout(const Duration(seconds: 10));
 
       return _handleResponse(response);
     } catch (e) {
@@ -726,7 +722,6 @@ class ApiService {
     final response = await http.post(
       Uri.parse(url),
       headers: currentAuthHeaders(),
-      headers: currentAuthHeaders(),
       body: json.encode(body),
     );
 
@@ -747,9 +742,6 @@ class ApiService {
           .get(
             Uri.parse(url),
             headers: currentAuthHeaders(),
-          )
-        Uri.parse(url),
-        headers: currentAuthHeaders(),
       ).timeout(const Duration(seconds: 10));
 
       return _handleResponse(response);
@@ -775,12 +767,7 @@ class ApiService {
             Uri.parse(url),
             headers: currentAuthHeaders(),
             body: json.encode(formattedData),
-          )
-        Uri.parse(url),
-        headers: currentAuthHeaders(),
-        body: json.encode(formattedData),
-      )
-          .timeout(const Duration(seconds: 10));
+          ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
         return json.decode(response.body);
@@ -802,12 +789,7 @@ class ApiService {
             Uri.parse(url),
             headers: currentAuthHeaders(),
             body: json.encode(attendanceData),
-          )
-        Uri.parse(url),
-        headers: currentAuthHeaders(),
-        body: json.encode(attendanceData),
-      )
-          .timeout(const Duration(seconds: 10));
+          ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -827,11 +809,7 @@ class ApiService {
           .delete(
             Uri.parse(url),
             headers: currentAuthHeaders(),
-          )
-        Uri.parse(url),
-        headers: currentAuthHeaders(),
-      )
-          .timeout(const Duration(seconds: 10));
+          ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 204) {
         throw Exception('Failed to delete attendance: ${response.statusCode}');
@@ -852,12 +830,7 @@ class ApiService {
             Uri.parse(url),
             headers: currentAuthHeaders(),
             body: json.encode({'attendance': attendanceList}),
-          )
-        Uri.parse(url),
-        headers: currentAuthHeaders(),
-        body: json.encode({'attendance': attendanceList}),
-      )
-          .timeout(const Duration(seconds: 15));
+          ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         return json.decode(response.body);

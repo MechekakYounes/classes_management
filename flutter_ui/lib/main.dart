@@ -10,7 +10,6 @@ import 'screens/baladiya_management_screen.dart';
 import 'screens/groups_screen.dart';
 import 'screens/sessions_screen.dart';
 import 'auth_service.dart';
-import 'constants/wilayas.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

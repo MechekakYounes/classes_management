@@ -49,6 +49,13 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create(['name' => 'payments.manage']);
         Permission::create(['name' => 'reports.view']);
 
+        Permission::create(['name' => 'sessions.view']);
+        Permission::create(['name' => 'sessions.create']);
+        Permission::create(['name' => 'sessions.edit']);
+        Permission::create(['name' => 'sessions.delete']);
+
+
+
         // Roles
         $superAdmin = Role::create(['name' => 'super-admin']); //National level admin with all permissions
         $admin      = Role::create(['name' => 'admin']); //Wilaya level admin with limited permissions
@@ -70,17 +77,23 @@ class RolesAndPermissionsSeeder extends Seeder
             'groups.create',
             'groups.edit',
             'groups.delete',
+            'sessions.view',
+            'sessions.create',
+            'sessions.edit',
+            'sessions.delete',
             'students.view',
             'students.create',
             'students.edit',
             'students.delete',
             'attendance.manage',
             'payments.manage',
-            'reports.view'
+            'reports.view',
+            
         ]);
         $supervisor->givePermissionTo([
             'communes.view','classes.view','classes.create','classes.edit','classes.delete',
             'groups.view','groups.create','groups.edit','groups.delete',
+            'sessions.view', 'sessions.create','sessions.edit','sessions.delete',
             'students.view','students.create','students.edit','students.delete',
             'attendance.manage',
             'payments.manage',
@@ -90,12 +103,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'classes.view',
             'groups.view','groups.create','groups.edit','groups.delete',
             'students.view','students.create','students.edit','students.delete',
+            'sessions.view','sessions.create','sessions.edit','sessions.delete',
             'attendance.manage',
             'payments.manage',
             'reports.view'
         ]);
         $teacher->givePermissionTo([
             'students.view','students.create','students.edit','students.delete',
+            'sessions.view','sessions.create','sessions.edit','sessions.delete',
             'attendance.manage',
             'payments.manage',
             'reports.view'
