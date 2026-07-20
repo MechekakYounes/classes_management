@@ -109,6 +109,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'reports.view'
         ]);
         $teacher->givePermissionTo([
+            'classes.view',
+            'groups.view',
             'students.view','students.create','students.edit','students.delete',
             'sessions.view','sessions.create','sessions.edit','sessions.delete',
             'attendance.manage',
