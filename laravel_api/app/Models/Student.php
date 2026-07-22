@@ -9,6 +9,9 @@ class Student extends Model
     protected $fillable = [
         'fname',
         'name',
+        'payement_status',
+        'phone',
+        'hifdh',
         'group_id'
     ];
 

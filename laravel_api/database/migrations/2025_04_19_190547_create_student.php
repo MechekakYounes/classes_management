@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('fname');
             $table->string('name');
+            $table->string('hifdh')->nullable();
+            $table->string('phone')->nullable();
+            $table->boolean('payement_status')->default(false);
             $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
 
             $table->timestamps();

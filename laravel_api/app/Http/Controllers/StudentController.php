@@ -12,7 +12,7 @@ class StudentController extends Controller
     public function import(Request $request)
     {
         $students = $request->input('students');
-        $groupId = $request->input('group_id'); // 👈 get the group_id from the request
+        $groupId = $request->input('group_id'); 
     
         if (!$groupId) {
             return response()->json(['error' => 'group_id is required'], 422);
@@ -22,6 +22,9 @@ class StudentController extends Controller
             Student::create([
                 'fname' => $studentData['fname'],
                 'name' => $studentData['name'],
+                'hifdh' => $studentData['hifdh'],
+                'phone' => $studentData['phone'],
+                'payement_status' => $studentData['payement_status'],
                 'group_id' => $groupId, 
             ]);
         }
@@ -78,6 +81,17 @@ public function destroy($id)
     return response()->json(null, 204);
 }
 
+public function show($id)
+{
+    $student = Student::findOrFail($id);
+    return response()->json($student);
 
+}
+
+public function show_all_students()
+{
+    $students = Student::all();
+    return response()->json($students);
+}
 
 }

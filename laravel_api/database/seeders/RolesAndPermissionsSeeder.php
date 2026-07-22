@@ -40,10 +40,12 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create(['name' => 'groups.edit']);
         Permission::create(['name' => 'groups.delete']);
 
+        Permission::create(['name' => 'students.view_all']);
         Permission::create(['name' => 'students.view']);
         Permission::create(['name' => 'students.create']);
         Permission::create(['name' => 'students.edit']);
         Permission::create(['name' => 'students.delete']);
+
 
         Permission::create(['name' => 'attendance.manage']);
         Permission::create(['name' => 'payments.manage']);
