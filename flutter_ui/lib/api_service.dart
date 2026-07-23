@@ -18,7 +18,7 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  static const String _baseUrl ='http://192.168.1.8:8000/api'; //http://10.0.2.2:8000/api/classes
+  static const String _baseUrl ='http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
   static const String _classesUrl = '$_baseUrl/classes';
   static const String _groupsUrl = '$_baseUrl/groups';
   static const Duration timeout = Duration(seconds: 30);

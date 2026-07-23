@@ -79,7 +79,10 @@ class _WilayaListScreenState extends State<WilayaListScreen> {
                       content: Text('تم تسجيل الخروج بنجاح', style: GoogleFonts.poppins()),
                       backgroundColor: Colors.red.shade400,
                     ),
-                    
+                  );
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    (route) => false,
                   );
                 }
               },
