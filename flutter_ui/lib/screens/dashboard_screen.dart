@@ -4,11 +4,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../api_service.dart';
+import '../auth_service.dart';
 import 'groups_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final int? communeId;
-  const DashboardScreen({Key? key, this.communeId}) : super(key: key);
+  final String? communeName;
+  const DashboardScreen({Key? key, this.communeId, this.communeName}) : super(key: key);
 
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
@@ -166,56 +168,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showEditClassDialog(Map<dynamic, dynamic> classToEdit) {
-    final _nameController = TextEditingController(text: classToEdit['name']);
-    final _specialityController =
-        TextEditingController(text: classToEdit['speciality']);
-    final _levelController = TextEditingController(text: classToEdit['level']);
-    final _semesterController =
-        TextEditingController(text: classToEdit['semester'] ?? '');
-    final _yearController = TextEditingController(text: classToEdit['year']);
+    final _nameController = TextEditingController(text: classToEdit['name'] ?? '');
+    final _addressController = TextEditingController(text: classToEdit['address'] ?? '');
+    final _emailController = TextEditingController(text: classToEdit['email'] ?? '');
+    final _phoneController = TextEditingController(text: classToEdit['phone'] ?? '');
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title:
-              Text('Edit Class', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildTextField(_nameController, 'Class Name'),
-                _buildTextField(_specialityController, 'Speciality'),
-                _buildTextField(_levelController, 'Level'),
-                _buildTextField(_semesterController, 'Semester'),
-                _buildTextField(_yearController, 'Year'),
-              ],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Center(
+            child: Text(
+              'تعديل المدرسة',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.cyan.shade800),
+            ),
+          ),
+          content: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTextField(_nameController, 'اسم المدرسة *', icon: FontAwesomeIcons.school),
+                  _buildTextField(_addressController, 'العنوان / الحي', icon: FontAwesomeIcons.locationDot),
+                  _buildTextField(_emailController, 'البريد الإلكتروني', icon: FontAwesomeIcons.envelope, keyboardType: TextInputType.emailAddress),
+                  _buildTextField(_phoneController, 'رقم الهاتف', icon: FontAwesomeIcons.phone, keyboardType: TextInputType.phone),
+                ],
+              ),
             ),
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: Text('إلغاء', style: TextStyle(color: Colors.grey)),
               onPressed: () => Navigator.pop(context),
             ),
             ElevatedButton(
-              child: Text('Update'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.cyan,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('حفظ التعديلات', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               onPressed: () async {
-                // Explicitly cast the map to Map<String, dynamic>
-                Map<String, dynamic> updatedData = {
-                  'name': _nameController.text,
-                  'speciality': _specialityController.text,
-                  'level': _levelController.text,
-                  'semester': _semesterController.text,
-                  'year': _yearController.text,
-                };
-
-                // Make sure classToEdit['id'] is a valid integer or String
-                int classId = int.tryParse(classToEdit['id'].toString()) ?? 0;
-                if (classId != 0) {
-                  await ApiService.updateClass(classId, updatedData);
-                  _loadData();
+                if (_nameController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى إدخال اسم المدرسة')));
+                  return;
+                }
+                final int classId = int.tryParse(classToEdit['id'].toString()) ?? 0;
+                if (classId == 0) return;
+                try {
+                  await ApiService.updateClass(classId, {
+                    'name':    _nameController.text.trim(),
+                    'address': _addressController.text.trim(),
+                    'email':   _emailController.text.trim(),
+                    'phone':   _phoneController.text.trim(),
+                  });
+                  fetchClassesAndUpdateFilters();
                   Navigator.pop(context);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ أثناء التعديل: $e')));
                 }
               },
             ),
@@ -439,11 +451,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = AuthService();
+    String appBarTitle;
+
+    if (auth.isSupervisor()) {
+      // Supervisor: always use their own commune name
+      final cName = auth.communeName ?? '';
+      appBarTitle = cName.isNotEmpty ? 'مدارس ($cName)' : 'المدارس';
+    } else if (widget.communeName != null && widget.communeName!.isNotEmpty) {
+      // Admin / SuperAdmin navigated to a specific Baladiya
+      appBarTitle = 'مدارس ${widget.communeName}';
+    } else {
+      appBarTitle = 'Class Dashboard';
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Class Dashboard'),
+          appBar: AppBar(
+
+        title: Text(
+
+          appBarTitle,
+
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 23),
+
+        ),
+
         centerTitle: true,
-      ),
+
+      ), 
+
+
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : error != null
@@ -520,37 +557,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Container(
-                          width: 250,
-                          height: 45,
-                          child: ElevatedButton.icon(
-                            onPressed: _showCreateClassDialog,
-                            icon: SvgPicture.asset(
-                              'assets/icons/plus.svg',
-                              width: 20,
-                              height: 20,
-                              color: Colors.white,
-                            ),
-                            label: Text(
-                              'Create New Class',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                      SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Container(
+                            height: 45,
+                            child: ElevatedButton.icon(
+                              onPressed: _showCreateClassDialog,
+                              icon: Icon(FontAwesomeIcons.plus, size: 16),
+                              label: Text(
+                                'إضافة مدرسة',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
                               ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.cyan,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.cyan,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          Spacer(),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.cyan.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.cyan.shade200),
+                            ),
+                            child: Text(
+                              '${_filteredClasses.length} مدرسة',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.cyan.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      SizedBox(height: 16),
                       Expanded(
                         child: _filteredClasses.isEmpty
                             ? Center(
@@ -705,53 +755,183 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showCreateClassDialog() {
+  void _showCreateClassDialog() async {
     final _nameController = TextEditingController();
-    final _specialityController = TextEditingController();
-    final _levelController = TextEditingController();
-    final _semesterController = TextEditingController();
-    final _yearController = TextEditingController();
+    final _addressController = TextEditingController();
+    final _emailController = TextEditingController();
+    final _phoneController = TextEditingController();
+
+    // Inline manager fields
+    final _mgrNameController = TextEditingController();
+    final _mgrUsernameController = TextEditingController();
+    final _mgrPasswordController = TextEditingController();
+    final _mgrPhoneController = TextEditingController();
+
+    List<dynamic> unassignedManagers = [];
+    int? selectedManagerId;
+    bool createNewManager = false;
+    bool isDialogLoading = true;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Create New Class',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildTextField(_nameController, 'Class Name'),
-                _buildTextField(_specialityController, 'Speciality'),
-                _buildTextField(_levelController, 'Level'),
-                _buildTextField(_semesterController, 'Semester'),
-                _buildTextField(_yearController, 'Year'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-                child: Text('Cancel'), onPressed: () => Navigator.pop(context)),
-            ElevatedButton(
-              child: Text('Create'),
-              onPressed: () async {
-                Map<String, dynamic> newClass = {
-                  'name': _nameController.text,
-                  'speciality': _specialityController.text,
-                  'level': _levelController.text,
-                  'semester': _semesterController.text,
-                  'year': _yearController.text,
-                  'commune_id': widget.communeId,
-                };
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            // Load unassigned managers on dialog open
+            if (isDialogLoading) {
+              ApiService.getUnassignedManagers().then((list) {
+                setDialogState(() {
+                  unassignedManagers = list;
+                  isDialogLoading = false;
+                });
+              }).catchError((_) {
+                setDialogState(() => isDialogLoading = false);
+              });
+            }
 
-                await ApiService.createClass(newClass);
-                _loadData();
-                Navigator.pop(context);
-              },
-            ),
-          ],
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Center(
+                child: Text(
+                  'إضافة مدرسة جديدة',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.cyan.shade800),
+                ),
+              ),
+              content: Container(
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildTextField(_nameController, 'اسم المدرسة *', icon: FontAwesomeIcons.school),
+                      _buildTextField(_addressController, 'العنوان / الحي *', icon: FontAwesomeIcons.locationDot),
+                      _buildTextField(_emailController, 'البريد الإلكتروني للمدرسة *', icon: FontAwesomeIcons.envelope, keyboardType: TextInputType.emailAddress),
+                      _buildTextField(_phoneController, 'رقم هاتف المدرسة (اختياري)', icon: FontAwesomeIcons.phone, keyboardType: TextInputType.phone),
+                      SizedBox(height: 16),
+                      Divider(),
+                      SizedBox(height: 8),
+                      Text(
+                        'مدير المدرسة',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.cyan.shade900),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ChoiceChip(
+                              label: Text('مدير موجود'),
+                              selected: !createNewManager,
+                              selectedColor: Colors.cyan,
+                              labelStyle: TextStyle(color: !createNewManager ? Colors.white : Colors.cyan.shade900),
+                              onSelected: (val) {
+                                setDialogState(() => createNewManager = !val);
+                              },
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: ChoiceChip(
+                              label: Text('+ حساب جديد'),
+                              selected: createNewManager,
+                              selectedColor: Colors.cyan,
+                              labelStyle: TextStyle(color: createNewManager ? Colors.white : Colors.cyan.shade900),
+                              onSelected: (val) {
+                                setDialogState(() => createNewManager = val);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      if (!createNewManager) ...[
+                        isDialogLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : DropdownButtonFormField<int>(
+                                value: selectedManagerId,
+                                decoration: InputDecoration(
+                                  labelText: 'اختر مديراً شاغراً',
+                                  prefixIcon: Icon(FontAwesomeIcons.userTie, color: Colors.cyan, size: 18),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                items: [
+                                  DropdownMenuItem<int>(
+                                    value: null,
+                                    child: Text('بدون مدير حالياً', style: TextStyle(color: Colors.grey)),
+                                  ),
+                                  ...unassignedManagers.map((m) {
+                                    return DropdownMenuItem<int>(
+                                      value: m['id'],
+                                      child: Text(m['name'] ?? m['username']),
+                                    );
+                                  }).toList(),
+                                ],
+                                onChanged: (val) {
+                                  setDialogState(() => selectedManagerId = val);
+                                },
+                              ),
+                      ] else ...[
+                        _buildTextField(_mgrNameController, 'اسم المدير الكامل *', icon: FontAwesomeIcons.user),
+                        _buildTextField(_mgrUsernameController, 'اسم المستخدم (Username) *', icon: FontAwesomeIcons.at),
+                        _buildTextField(_mgrPasswordController, 'كلمة المرور *', icon: FontAwesomeIcons.lock, obscureText: true),
+                        _buildTextField(_mgrPhoneController, 'هاتف المدير (اختياري)', icon: FontAwesomeIcons.phone, keyboardType: TextInputType.phone),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  child: Text('إلغاء', style: TextStyle(color: Colors.grey)),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyan,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('إضافة المدرسة', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  onPressed: () async {
+                    if (_nameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى إدخال اسم المدرسة')));
+                      return;
+                    }
+
+                    Map<String, dynamic> newClassData = {
+                      'name': _nameController.text.trim(),
+                      'address': _addressController.text.trim(),
+                      'email': _emailController.text.trim(),
+                      'phone': _phoneController.text.trim(),
+                      'commune_id': widget.communeId,
+                    };
+
+                    if (!createNewManager && selectedManagerId != null) {
+                      newClassData['manager_id'] = selectedManagerId;
+                    } else if (createNewManager) {
+                      if (_mgrUsernameController.text.trim().isEmpty || _mgrPasswordController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى إدخال اسم المستخدم وكلمة المرور للمدير')));
+                        return;
+                      }
+                      newClassData['new_manager'] = {
+                        'name': _mgrNameController.text.trim().isNotEmpty ? _mgrNameController.text.trim() : '${_nameController.text} Manager',
+                        'username': _mgrUsernameController.text.trim(),
+                        'password': _mgrPasswordController.text.trim(),
+                        'phone': _mgrPhoneController.text.trim(),
+                      };
+                    }
+
+                    try {
+                      await ApiService.createClass(newClassData);
+                      fetchClassesAndUpdateFilters();
+                      Navigator.pop(context);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ أثناء إضافة المدرسة: $e')));
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -764,14 +944,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '';
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    IconData? icon,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
         controller: controller,
+        keyboardType: keyboardType,
+        obscureText: obscureText,
         decoration: InputDecoration(
           labelText: label,
+          prefixIcon: icon != null ? Icon(icon, color: Colors.cyan, size: 18) : null,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
       ),
     );

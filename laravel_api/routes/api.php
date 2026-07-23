@@ -8,13 +8,43 @@ use App\Http\Controllers\CommuneController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StudentController;
-
+use App\Http\Controllers\WilayaController;
+use App\Http\Controllers\UserController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     //logout route
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/wilayas', [WilayaController::class, 'index']);
+
+    // Teachers
+    Route::get('/teachers', [UserController::class, 'getTeachers']);
+    Route::post('/teachers', [UserController::class, 'createTeacher']);
+    Route::put('/teachers/{id}', [UserController::class, 'updateTeacher']);
+    Route::delete('/teachers/{id}', [UserController::class, 'deleteTeacher']);
+
+    // Managers
+    Route::get('/managers', [UserController::class, 'getManagers']);
+    Route::post('/managers', [UserController::class, 'createManager']);
+    Route::put('/managers/{id}', [UserController::class, 'updateManager']);
+    Route::delete('/managers/{id}', [UserController::class, 'deleteManager']);
+    Route::get('/unassigned-managers', [UserController::class, 'getUnassignedManagers']);
+
+    // Supervisors
+    Route::get('/supervisors', [UserController::class, 'getSupervisors']);
+    Route::post('/supervisors', [UserController::class, 'createSupervisor']);
+    Route::put('/supervisors/{id}', [UserController::class, 'updateSupervisor']);
+    Route::delete('/supervisors/{id}', [UserController::class, 'deleteSupervisor']);
+
+    // Admins
+    Route::get('/admins', [UserController::class, 'getAdmins']);
+    Route::post('/admins', [UserController::class, 'createAdmin']);
+    Route::put('/admins/{id}', [UserController::class, 'updateAdmin']);
+    Route::delete('/admins/{id}', [UserController::class, 'deleteAdmin']);
+
+    Route::get('/unassigned-classes', [ClassController::class, 'getUnassignedSchools']);
 
     // classes routes
     Route::middleware('permission:classes.view')->group(function () {

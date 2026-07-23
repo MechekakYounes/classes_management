@@ -18,7 +18,7 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  static const String _baseUrl ='http://localhost:8000/api'; //http://10.0.2.2:8000/api/classes
+  static const String _baseUrl ='http://192.168.1.8:8000/api'; //http://10.0.2.2:8000/api/classes
   static const String _classesUrl = '$_baseUrl/classes';
   static const String _groupsUrl = '$_baseUrl/groups';
   static const Duration timeout = Duration(seconds: 30);
@@ -187,11 +187,11 @@ class ApiService {
   // ================================== COMMUNES ===================================================================
   static const String _communesUrl = '$_baseUrl/communes';
 
-  static Future<List<dynamic>> getCommunesByWilaya(int wilayaId) async {
+  static Future<List<dynamic>> getCommunes({int? wilayaId}) async {
     try {
-      final uri = Uri.parse('$_communesUrl?wilaya_id=$wilayaId');
+      final url = wilayaId != null ? '$_communesUrl?wilaya_id=$wilayaId' : _communesUrl;
       final response = await http.get(
-        uri,
+        Uri.parse(url),
         headers: currentAuthHeaders(),
       ).timeout(const Duration(seconds: 10));
 
@@ -199,6 +199,10 @@ class ApiService {
     } catch (e) {
       throw Exception('Failed to fetch communes: $e');
     }
+  }
+
+  static Future<List<dynamic>> getCommunesByWilaya(int wilayaId) async {
+    return getCommunes(wilayaId: wilayaId);
   }
 
   static Future<Map<String, dynamic>> createCommune(Map<String, dynamic> communeData) async {
@@ -555,13 +559,62 @@ class ApiService {
     }
   }
 
-////============================STUDENTS====================================================================
-  static String get _studentsUrl => '$_baseUrl/students';
-  static Future<List<dynamic>> getStudents() async {
+  static Future<List<dynamic>> getWilayas() async {
     try {
       final response = await http
           .get(
-            Uri.parse(_studentsUrl),
+            Uri.parse('$_baseUrl/wilayas'),
+            headers: currentAuthHeaders(),
+          )
+          .timeout(const Duration(seconds: 10));
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Failed to load wilayas: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getTeachers({int? wilayaId, int? communeId, int? classId, int? groupId}) async {
+    try {
+      String url = '$_baseUrl/teachers';
+      List<String> queryParams = [];
+      if (wilayaId != null) queryParams.add('wilaya_id=$wilayaId');
+      if (communeId != null) queryParams.add('commune_id=$communeId');
+      if (classId != null) queryParams.add('class_id=$classId');
+      if (groupId != null) queryParams.add('group_id=$groupId');
+
+      if (queryParams.isNotEmpty) {
+          url += '?' + queryParams.join('&');
+      }
+
+      final response = await http
+          .get(
+            Uri.parse(url),
+            headers: currentAuthHeaders(),
+          )
+          .timeout(const Duration(seconds: 10));
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Failed to load teachers: $e');
+    }
+  }
+
+  static String get _studentsUrl => '$_baseUrl/students';
+  static Future<List<dynamic>> getStudents({int? wilayaId, int? communeId, int? classId, int? groupId}) async {
+    try {
+      String url = _studentsUrl;
+      List<String> queryParams = [];
+      if (wilayaId != null) queryParams.add('wilaya_id=$wilayaId');
+      if (communeId != null) queryParams.add('commune_id=$communeId');
+      if (classId != null) queryParams.add('class_id=$classId');
+      if (groupId != null) queryParams.add('group_id=$groupId');
+
+      if (queryParams.isNotEmpty) {
+          url += '?' + queryParams.join('&');
+      }
+
+      final response = await http
+          .get(
+            Uri.parse(url),
             headers: currentAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
@@ -840,6 +893,265 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Failed to create bulk attendance: $e');
+    }
+  }
+
+  // --- USER MANAGEMENT API METHODS ---
+
+  static Future<List<dynamic>> getUnassignedManagers() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$_baseUrl/unassigned-managers'), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Failed to load unassigned managers: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getUnassignedSchools({int? communeId}) async {
+    try {
+      String url = '$_baseUrl/unassigned-classes';
+      if (communeId != null) url += '?commune_id=$communeId';
+      final response = await http
+          .get(Uri.parse(url), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Failed to load unassigned schools: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getManagers({int? communeId, int? classId}) async {
+    try {
+      String url = '$_baseUrl/managers';
+      List<String> params = [];
+      if (communeId != null) params.add('commune_id=$communeId');
+      if (classId != null) params.add('class_id=$classId');
+      if (params.isNotEmpty) url += '?' + params.join('&');
+
+      final response = await http
+          .get(Uri.parse(url), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Failed to load managers: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createManager(Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/managers'),
+            headers: currentAuthHeaders(),
+            body: json.encode(data),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final err = json.decode(response.body);
+        throw Exception(err['message'] ?? 'Failed to create manager');
+      }
+    } catch (e) {
+      throw Exception('Failed to create manager: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getSupervisors({int? wilayaId, int? communeId}) async {
+    try {
+      String url = '$_baseUrl/supervisors';
+      List<String> params = [];
+      if (wilayaId != null) params.add('wilaya_id=$wilayaId');
+      if (communeId != null) params.add('commune_id=$communeId');
+      if (params.isNotEmpty) url += '?' + params.join('&');
+
+      final response = await http
+          .get(Uri.parse(url), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Failed to load supervisors: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createSupervisor(Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/supervisors'),
+            headers: currentAuthHeaders(),
+            body: json.encode(data),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final err = json.decode(response.body);
+        throw Exception(err['message'] ?? 'Failed to create supervisor');
+      }
+    } catch (e) {
+      throw Exception('Failed to create supervisor: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getAdmins({int? wilayaId}) async {
+    try {
+      String url = '$_baseUrl/admins';
+      if (wilayaId != null) url += '?wilaya_id=$wilayaId';
+
+      final response = await http
+          .get(Uri.parse(url), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Failed to load admins: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createAdmin(Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/admins'),
+            headers: currentAuthHeaders(),
+            body: json.encode(data),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final err = json.decode(response.body);
+        throw Exception(err['message'] ?? 'Failed to create admin');
+      }
+    } catch (e) {
+      throw Exception('Failed to create admin: $e');
+    }
+  }
+
+  // ─── Teacher CRUD ─────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> createTeacher(Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .post(Uri.parse('$_baseUrl/teachers'), headers: currentAuthHeaders(), body: json.encode(data))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 201 || response.statusCode == 200) return json.decode(response.body);
+      final err = json.decode(response.body);
+      throw Exception(err['message'] ?? 'Failed to create teacher');
+    } catch (e) {
+      throw Exception('Failed to create teacher: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateTeacher(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .put(Uri.parse('$_baseUrl/teachers/$id'), headers: currentAuthHeaders(), body: json.encode(data))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return json.decode(response.body);
+      final err = json.decode(response.body);
+      throw Exception(err['message'] ?? 'Failed to update teacher');
+    } catch (e) {
+      throw Exception('Failed to update teacher: $e');
+    }
+  }
+
+  static Future<void> deleteTeacher(int id) async {
+    try {
+      final response = await http
+          .delete(Uri.parse('$_baseUrl/teachers/$id'), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 204 && response.statusCode != 200) {
+        throw Exception('Failed to delete teacher: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete teacher: $e');
+    }
+  }
+
+  // ─── Manager update / delete ──────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> updateManager(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .put(Uri.parse('$_baseUrl/managers/$id'), headers: currentAuthHeaders(), body: json.encode(data))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return json.decode(response.body);
+      final err = json.decode(response.body);
+      throw Exception(err['message'] ?? 'Failed to update manager');
+    } catch (e) {
+      throw Exception('Failed to update manager: $e');
+    }
+  }
+
+  static Future<void> deleteManager(int id) async {
+    try {
+      final response = await http
+          .delete(Uri.parse('$_baseUrl/managers/$id'), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 204 && response.statusCode != 200) {
+        throw Exception('Failed to delete manager: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete manager: $e');
+    }
+  }
+
+  // ─── Supervisor update / delete ───────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> updateSupervisor(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .put(Uri.parse('$_baseUrl/supervisors/$id'), headers: currentAuthHeaders(), body: json.encode(data))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return json.decode(response.body);
+      final err = json.decode(response.body);
+      throw Exception(err['message'] ?? 'Failed to update supervisor');
+    } catch (e) {
+      throw Exception('Failed to update supervisor: $e');
+    }
+  }
+
+  static Future<void> deleteSupervisor(int id) async {
+    try {
+      final response = await http
+          .delete(Uri.parse('$_baseUrl/supervisors/$id'), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 204 && response.statusCode != 200) {
+        throw Exception('Failed to delete supervisor: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete supervisor: $e');
+    }
+  }
+
+  // ─── Admin update / delete ────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> updateAdmin(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .put(Uri.parse('$_baseUrl/admins/$id'), headers: currentAuthHeaders(), body: json.encode(data))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return json.decode(response.body);
+      final err = json.decode(response.body);
+      throw Exception(err['message'] ?? 'Failed to update admin');
+    } catch (e) {
+      throw Exception('Failed to update admin: $e');
+    }
+  }
+
+  static Future<void> deleteAdmin(int id) async {
+    try {
+      final response = await http
+          .delete(Uri.parse('$_baseUrl/admins/$id'), headers: currentAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 204 && response.statusCode != 200) {
+        throw Exception('Failed to delete admin: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete admin: $e');
     }
   }
 }

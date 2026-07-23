@@ -17,7 +17,7 @@ class Student extends Model
 
     protected $table = 'students';
 
-    public function groups()
+    public function group()
 {
     return $this->belongsTo(Group::class);
 }

@@ -18,4 +18,8 @@ class Commune extends Model
        return $this->hasMany(Classes::class);
    }
 
+   public function wilaya()
+   {
+       return $this->belongsTo(Wilaya::class);
+   }
 }

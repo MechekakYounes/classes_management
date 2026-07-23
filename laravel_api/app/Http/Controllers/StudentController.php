@@ -33,10 +33,60 @@ class StudentController extends Controller
     }
     
 
-public function index(Request $request, $groupId) {
+public function index(Request $request, $groupId = null) {
+    $user = $request->user();
+    $query = Student::query();
 
+    if ($groupId) {
+        $query->where('group_id', $groupId);
+    } else {
+        // Scoping based on user role
+        if ($user->hasRole('super-admin')) {
+            // no additional filters
+        } elseif ($user->hasRole('admin')) {
+            $query->whereHas('group.classes.commune', function ($q) use ($user) {
+                $q->where('wilaya_id', $user->wilaya_id);
+            });
+        } elseif ($user->hasRole('supervisor')) {
+            $query->whereHas('group.classes', function ($q) use ($user) {
+                $q->where('commune_id', $user->commune_id);
+            });
+        } elseif ($user->hasRole('manager')) {
+            $query->whereHas('group', function ($q) use ($user) {
+                $q->where('class_id', $user->class_id);
+            });
+        } elseif ($user->hasRole('teacher')) {
+            $query->where('group_id', $user->group_id);
+        }
+    }
 
-    $students = Student::where('group_id',$groupId)->get();
+    // Apply any query param filters from the request
+    if ($request->has('wilaya_id') && $request->wilaya_id) {
+        $query->whereHas('group.classes.commune', function($q) use ($request) {
+            $q->where('wilaya_id', $request->wilaya_id);
+        });
+    }
+    if ($request->has('commune_id') && $request->commune_id) {
+         $query->whereHas('group.classes', function($q) use ($request) {
+            $q->where('commune_id', $request->commune_id);
+        });
+    }
+    if ($request->has('class_id') && $request->class_id) {
+        $query->whereHas('group', function($q) use ($request) {
+            $q->where('class_id', $request->class_id);
+        });
+    }
+
+    $students = $query->with('group.classes.commune.wilaya')->get();
+
+    $students->map(function ($student) {
+        $student->group_name = $student->group->name ?? null;
+        $student->class_name = $student->group->classes->name ?? null;
+        $student->commune_name = $student->group->classes->commune->name ?? null;
+        $student->wilaya_name = $student->group->classes->commune->wilaya->name ?? null;
+        return $student;
+    });
+
     return response()->json($students);
 }
 

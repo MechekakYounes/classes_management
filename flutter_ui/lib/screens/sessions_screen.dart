@@ -689,9 +689,7 @@ class _SessionScreenState extends State<SessionScreen>
       appBar: AppBar(
         title: Text(
           widget.groupName,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 25),
         ),
         centerTitle: true,
       ),
@@ -762,12 +760,6 @@ class _SessionScreenState extends State<SessionScreen>
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateSessionDialog,
-        backgroundColor: Colors.cyan,
-        child: Icon(Icons.add, color: Colors.white),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -878,7 +870,50 @@ class _SessionScreenState extends State<SessionScreen>
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  height: 45,
+                  child: ElevatedButton.icon(
+                    onPressed: _showCreateSessionDialog,
+                    icon: Icon(FontAwesomeIcons.plus, size: 16),
+                    label: Text(
+                      'إضافة حصة',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.cyan,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                Spacer(),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.cyan.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.cyan.shade200),
+                  ),
+                  child: Text(
+                    '${filteredSessions.length} حصة',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.cyan.shade800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
             Expanded(
               child: filteredSessions.isEmpty
                   ? Center(

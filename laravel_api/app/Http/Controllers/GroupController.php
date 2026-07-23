@@ -18,15 +18,20 @@ class GroupController extends Controller
     public function store(Request $request, $classId)
     {
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
+            'name'     => 'required|string|max:255',
+            'type'     => 'nullable|string|max:255',
+            'type_age' => 'nullable|string|max:255',
+            'gender'   => 'nullable|string|max:255',
         ]);
 
-        $group = new Group();
-        $group->name = $validatedData['name'];
-        $group->type = $validatedData['type'];
-        $group->class_id = $classId;
-        $group->save();
+        $group = Group::create([
+            'name'     => $validatedData['name'],
+            'type'     => $validatedData['type'] ?? null,
+            'type_age' => $validatedData['type_age'] ?? null,
+            'gender'   => $validatedData['gender'] ?? null,
+            'class_id' => $classId,
+        ]);
+
         return response()->json(['data' => $group], 201);
     }
 
@@ -44,8 +49,10 @@ class GroupController extends Controller
     public function update(Request $request, $classId, $groupId)
     {
         $validatedData = $request->validate([
-            'name' => 'string|max:255',
-            'type' => 'string|max:255',
+            'name'     => 'nullable|string|max:255',
+            'type'     => 'nullable|string|max:255',
+            'type_age' => 'nullable|string|max:255',
+            'gender'   => 'nullable|string|max:255',
         ]);
 
         $group = Group::where('class_id', $classId)

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../api_service.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -260,7 +261,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Take Attendance'),
+          title: Text(
+            'Take Attendance',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
           centerTitle: true,
           actions: [
             IconButton(

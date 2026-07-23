@@ -99,7 +99,7 @@ class _WilayaListScreenState extends State<WilayaListScreen> {
       appBar: AppBar(
         title: Text(
           'قائمة الولايات',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 25),
         ),
         centerTitle: true,
         actions: [

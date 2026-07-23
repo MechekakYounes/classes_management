@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../api_service.dart';
 import '../excel_service.dart';
 
@@ -553,46 +554,66 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
             SizedBox(height: 16),
             Row(
               children: [
-                Text(
-                  'Students (${filteredStudents.length})',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueGrey.shade800,
+                Container(
+                  height: 40,
+                  child: ElevatedButton.icon(
+                    icon: Icon(FontAwesomeIcons.plus, size: 14),
+                    label: Text(
+                      'إضافة تلميذ',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    onPressed: _showAddStudentDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.cyan,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Container(
+                  height: 40,
+                  child: ElevatedButton.icon(
+                    icon: Icon(
+                      FontAwesomeIcons.fileExcel,
+                      size: 14,
+                      color: Colors.greenAccent,
+                    ),
+                    label: Text(
+                      'استيراد إكسل',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    onPressed: _importAndSendStudents,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.cyan,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
                   ),
                 ),
                 Spacer(),
-                ElevatedButton.icon(
-                  icon: Icon(FontAwesomeIcons.plus, size: 16),
-                  label: Text('Add  a Student'),
-                  onPressed: _showAddStudentDialog,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyan,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.cyan.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.cyan.shade200),
+                  ),
+                  child: Text(
+                    '${filteredStudents.length} تلميذ',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.cyan.shade800,
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                 ),
-                Spacer(),
-                ElevatedButton.icon(
-                  icon: Icon(
-                    FontAwesomeIcons.fileExcel,
-                    size: 16,
-                    color: Colors.greenAccent,
-                  ),
-                  label: Text('Import Excel File'),
-                  onPressed: _importAndSendStudents,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyan,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  ),
-                )
               ],
             ),
             SizedBox(height: 16),

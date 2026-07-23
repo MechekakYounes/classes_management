@@ -250,13 +250,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title = 'إدارة النظام (SUPER-ADMIN)';
       items = [
         _buildSettingTile(
-          icon: FontAwesomeIcons.usersGear,
-          title: 'إدارة حسابات المشرفين الولائيين',
-          subtitle: 'إضافة وتعديل وصلاحيات المشرفين بالولايات',
-          onTap: () {},
-        ),
-        const Divider(height: 1),
-        _buildSettingTile(
           icon: FontAwesomeIcons.sliders,
           title: 'ثوابت النظام العامة',
           subtitle: 'إعدادات المنظومة والخيارات الافتراضية',
@@ -265,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const Divider(height: 1),
         _buildSettingTile(
           icon: FontAwesomeIcons.fileContract,
-          title: 'سجلات الوصول الكاملة',
+          title: 'سجلات الوصول والنشاط الكاملة',
           subtitle: 'سجل عمليات المستخدمين والنشاطات والولوج',
           onTap: () {},
         ),
@@ -274,9 +267,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title = 'إدارة الولاية (ADMIN)';
       items = [
         _buildSettingTile(
-          icon: FontAwesomeIcons.usersViewfinder,
-          title: 'إدارة المشرفين والمدراء بالولاية',
-          subtitle: 'التحكم في حسابات المشرفين البلديين ومدراء المدارس',
+          icon: FontAwesomeIcons.filePdf,
+          title: 'تصدير تقارير الولاية الشاملة',
+          subtitle: 'توليد تقارير شاملة عن المدارس والتلاميذ',
           onTap: () {},
         ),
       ];
@@ -284,16 +277,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title = 'إدارة البلدية (SUPERVISOR)';
       items = [
         _buildSettingTile(
-          icon: FontAwesomeIcons.compass,
-          title: 'تعديل نطاق الإشراف البلدي',
-          subtitle: 'ضبط حدود وتوزيع المدارس بالبلدية',
-          onTap: () {},
-        ),
-        const Divider(height: 1),
-        _buildSettingTile(
-          icon: FontAwesomeIcons.clipboardCheck,
-          title: 'سجلات مراقبة تعيين المدارس',
-          subtitle: 'متابعة تعيينات المدارس وتحديثاتها المستمرة',
+          icon: FontAwesomeIcons.filePdf,
+          title: 'تصدير تقارير مدارس البلدية',
+          subtitle: 'متابعة تعيينات المدارس وتحديثاتها بصيغة PDF',
           onTap: () {},
         ),
       ];
@@ -301,23 +287,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title = 'إعدادات المؤسسة (MANAGER)';
       items = [
         _buildSettingTile(
-          icon: FontAwesomeIcons.school,
-          title: 'بيانات ملف المدرسة',
-          subtitle: 'تعديل معلومات وتفاصيل المجمع المدرسي',
-          onTap: () {},
-        ),
-        const Divider(height: 1),
-        _buildSettingTile(
           icon: FontAwesomeIcons.stopwatch,
           title: 'تهيئة مؤقتات الحصص',
           subtitle: 'ضبط توقيتات الحصص الدراسية وفترات الراحة',
-          onTap: () {},
-        ),
-        const Divider(height: 1),
-        _buildSettingTile(
-          icon: FontAwesomeIcons.chalkboardTeacher,
-          title: 'ربط وتعيين المعلمين',
-          subtitle: 'تعيين الأساتذة للأفواج والمجموعات التعليمية',
           onTap: () {},
         ),
       ];
@@ -400,14 +372,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: Text(
           'Settings',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
-        backgroundColor: Colors.cyan.shade600,
-        elevation: 0,
       ),
       body: SingleChildScrollView(
         child: Column(
