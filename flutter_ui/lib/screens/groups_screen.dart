@@ -302,81 +302,113 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   void _showCreateGroupDialog() {
     final _nameController = TextEditingController();
-    String tempGroupType = '';
+    String tempTypeAge = '';
+    String tempGender = '';
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Create New Group',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTextField(_nameController, 'Group Name'),
-                SizedBox(height: 10),
-                // Group Type Dropdown
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Group Type',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  value: tempGroupType.isEmpty ? null : tempGroupType,
-                  items: [
-                    DropdownMenuItem(value: 'TD', child: Text('TD')),
-                    DropdownMenuItem(value: 'TP', child: Text('TP')),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Center(
+                child: Text(
+                  'إضافة فوج جديد',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTextField(_nameController, 'إسم الفوج *'),
+                    SizedBox(height: 12),
+
+                    // نوع الفوج
+                    Text('نوع الفوج', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      children: ['كبار', 'صغار', 'مختلط'].map((val) {
+                        final selected = tempTypeAge == val;
+                        return ChoiceChip(
+                          label: Text(val),
+                          selected: selected,
+                          selectedColor: Colors.cyan,
+                          labelStyle: TextStyle(
+                            color: selected ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          onSelected: (_) => setDialogState(() => tempTypeAge = val),
+                        );
+                      }).toList(),
+                    ),
+                    SizedBox(height: 14),
+
+                    // الجنس
+                    Text('الجنس', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      children: ['ذكور', 'إناث', 'مختلط'].map((val) {
+                        final selected = tempGender == val;
+                        return ChoiceChip(
+                          label: Text(val),
+                          selected: selected,
+                          selectedColor: Colors.cyan,
+                          labelStyle: TextStyle(
+                            color: selected ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          onSelected: (_) => setDialogState(() => tempGender = val),
+                        );
+                      }).toList(),
+                    ),
                   ],
-                  onChanged: (value) => tempGroupType = value ?? '',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  child: Text('إلغاء'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyan,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('إنشاء', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  onPressed: () async {
+                    if (_nameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('يرجى إدخال اسم الفوج')),
+                      );
+                      return;
+                    }
+
+                    final newGroup = {
+                      'name':     _nameController.text.trim(),
+                      'type_age': tempTypeAge.isEmpty ? null : tempTypeAge,
+                      'gender':   tempGender.isEmpty  ? null : tempGender,
+                      'class_id': widget.classId,
+                    };
+
+                    try {
+                      await ApiService.createGroup(widget.classId, newGroup);
+                      Navigator.pop(context);
+                      _loadGroups();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('فشل إنشاء الفوج: ${e.toString()}')),
+                      );
+                    }
+                  },
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () => Navigator.pop(context),
-            ),
-            ElevatedButton(
-              child: Text('Create'),
-              onPressed: () async {
-                if (_nameController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Group name cannot be empty')),
-                  );
-                  return;
-                }
-
-                if (tempGroupType.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please select a group type')),
-                  );
-                  return;
-                }
-
-                Map<String, dynamic> newGroup = {
-                  'name': _nameController.text,
-                  'type': tempGroupType,
-                  'class_id': widget.classId,
-                };
-
-                try {
-                  await ApiService.createGroup(widget.classId, newGroup);
-                  Navigator.pop(context);
-                  _loadGroups();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content:
-                            Text('Failed to create group: ${e.toString()}')),
-                  );
-                }
-              },
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -384,81 +416,112 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   void _showEditGroupDialog(Map<String, dynamic> group) {
     final _nameController = TextEditingController(text: group['name'] ?? '');
-    String tempGroupType = group['type'] ?? '';
+    String tempTypeAge = group['type_age'] ?? '';
+    String tempGender = group['gender'] ?? '';
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title:
-              Text('Edit Group', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTextField(_nameController, 'Group Name'),
-                SizedBox(height: 10),
-                // Group Type Dropdown
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Group Type',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  value: tempGroupType.isEmpty ? null : tempGroupType,
-                  items: [
-                    DropdownMenuItem(value: 'TD', child: Text('TD')),
-                    DropdownMenuItem(value: 'TP', child: Text('TP')),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Center(
+                child: Text(
+                  'تعديل الفوج',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTextField(_nameController, 'إسم الفوج *'),
+                    SizedBox(height: 12),
+
+                    // نوع الفوج
+                    Text('نوع الفوج', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      children: ['كبار', 'صغار', 'مختلط'].map((val) {
+                        final selected = tempTypeAge == val;
+                        return ChoiceChip(
+                          label: Text(val),
+                          selected: selected,
+                          selectedColor: Colors.cyan,
+                          labelStyle: TextStyle(
+                            color: selected ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          onSelected: (_) => setDialogState(() => tempTypeAge = val),
+                        );
+                      }).toList(),
+                    ),
+                    SizedBox(height: 14),
+
+                    // الجنس
+                    Text('الجنس', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      children: ['ذكور', 'إناث', 'مختلط'].map((val) {
+                        final selected = tempGender == val;
+                        return ChoiceChip(
+                          label: Text(val),
+                          selected: selected,
+                          selectedColor: Colors.cyan,
+                          labelStyle: TextStyle(
+                            color: selected ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          onSelected: (_) => setDialogState(() => tempGender = val),
+                        );
+                      }).toList(),
+                    ),
                   ],
-                  onChanged: (value) => tempGroupType = value ?? '',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  child: Text('إلغاء'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyan,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('حفظ التعديلات', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  onPressed: () async {
+                    if (_nameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('يرجى إدخال اسم الفوج')),
+                      );
+                      return;
+                    }
+
+                    final updatedGroup = {
+                      'name':     _nameController.text.trim(),
+                      'type_age': tempTypeAge.isEmpty ? null : tempTypeAge,
+                      'gender':   tempGender.isEmpty  ? null : tempGender,
+                    };
+
+                    try {
+                      await ApiService.updateGroup(widget.classId, group['id'], updatedGroup);
+                      Navigator.pop(context);
+                      _loadGroups();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('فشل تعديل الفوج: ${e.toString()}')),
+                      );
+                    }
+                  },
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () => Navigator.pop(context),
-            ),
-            ElevatedButton(
-              child: Text('Update'),
-              onPressed: () async {
-                if (_nameController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Group name cannot be empty')),
-                  );
-                  return;
-                }
-
-                if (tempGroupType.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please select a group type')),
-                  );
-                  return;
-                }
-
-                Map<String, dynamic> updatedGroup = {
-                  'name': _nameController.text,
-                  'type': tempGroupType,
-                };
-
-                try {
-                  await ApiService.updateGroup(
-                      widget.classId, group['id'], updatedGroup);
-                  Navigator.pop(context);
-                  _loadGroups();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content:
-                            Text('Failed to update group: ${e.toString()}')),
-                  );
-                }
-              },
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -586,11 +649,10 @@ class _GroupsScreenState extends State<GroupsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.className.length > 16
-              ? widget.className.substring(0, 16) + '...'
-              : widget.className,
+          widget.className,
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 23),
         ),
         centerTitle: true,
       ),
@@ -661,37 +723,50 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Container(
-                          width: 250,
-                          height: 45,
-                          child: ElevatedButton.icon(
-                            onPressed: _showCreateGroupDialog,
-                            icon: SvgPicture.asset(
-                              'assets/icons/plus.svg',
-                              width: 20,
-                              height: 20,
-                              color: Colors.white,
-                            ),
-                            label: Text(
-                              'Create New Group',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                      SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Container(
+                            height: 45,
+                            child: ElevatedButton.icon(
+                              onPressed: _showCreateGroupDialog,
+                              icon: Icon(FontAwesomeIcons.plus, size: 16),
+                              label: Text(
+                                'إضافة فوج',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
                               ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.cyan,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.cyan,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          Spacer(),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.cyan.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.cyan.shade200),
+                            ),
+                            child: Text(
+                              '${_filteredGroups.length} فوج',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.cyan.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      SizedBox(height: 16),
                       Expanded(
                         child: _filteredGroups.isEmpty
                             ? Center(
@@ -716,9 +791,25 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                         subtitle: Padding(
                                           padding:
                                               const EdgeInsets.only(top: 8.0),
-                                          child: Text(
-                                              'Type: ${group['type'] ?? ""}',
-                                              style: TextStyle(fontSize: 14)),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              if ((group['type_age'] ?? '').toString().isNotEmpty)
+                                                Row(children: [
+                                                  Icon(Icons.group, size: 14, color: Colors.cyan.shade700),
+                                                  SizedBox(width: 4),
+                                                  Text('نوع الفوج: ${group['type_age']}', style: TextStyle(fontSize: 13)),
+                                                ]),
+                                              if ((group['gender'] ?? '').toString().isNotEmpty)
+                                                Row(children: [
+                                                  Icon(Icons.people, size: 14, color: Colors.cyan.shade700),
+                                                  SizedBox(width: 4),
+                                                  Text('الجنس: ${group['gender']}', style: TextStyle(fontSize: 13)),
+                                                ]),
+                                              if ((group['type_age'] ?? '').toString().isEmpty && (group['gender'] ?? '').toString().isEmpty)
+                                                Text('لا توجد تفاصيل إضافية', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                                            ],
+                                          ),
                                         ),
                                         trailing: Row(
                                           mainAxisSize: MainAxisSize.min,

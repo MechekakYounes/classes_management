@@ -281,7 +281,7 @@ class _BaladiyaManagementScreenState extends State<BaladiyaManagementScreen> {
       appBar: AppBar(
         title: Text(
           'بلديات ولاية ${widget.wilayaName}',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 25),
         ),
         centerTitle: true,
         automaticallyImplyLeading: !isUserAdmin, // Hide back button for locked admin role
@@ -381,7 +381,7 @@ class _BaladiyaManagementScreenState extends State<BaladiyaManagementScreen> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => DashboardScreen(communeId: id),
+                                              builder: (context) => DashboardScreen(communeId: id, communeName: item['name']),
                                             ),
                                           );
                                         },

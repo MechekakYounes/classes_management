@@ -8,6 +8,9 @@ class Classes extends Model
 {
     protected $fillable = [
         'name',
+        'address',
+        'email',
+        'phone',
         'speciality',
         'level',
         'year',
@@ -16,12 +19,17 @@ class Classes extends Model
     ];
 
     public function groups()
-{
-    return $this->hasMany(Group::class);
-}
+    {
+        return $this->hasMany(Group::class);
+    }
    
     public function commune()
-   {
-    return $this->belongsTo(Commune::class);
+    {
+        return $this->belongsTo(Commune::class);
     }   
+
+    public function manager()
+    {
+        return $this->hasOne(User::class, 'class_id')->role('manager');
+    }
 }

@@ -9,13 +9,15 @@ class Group extends Model
     protected $fillable = [
         'name',
         'type',
+        'type_age',
+        'gender',
         'class_id'
     ];
 
 
 public function classes()
 {
-    return $this->belongsTo(Classes::class);
+    return $this->belongsTo(Classes::class, 'class_id');
 }
 
 public function students()

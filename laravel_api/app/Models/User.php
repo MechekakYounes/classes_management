@@ -68,6 +68,16 @@ class User extends Authenticatable
         return $this->belongsTo(Commune::class);
     }
 
+    public function class()
+    {
+        return $this->belongsTo(Classes::class, 'class_id');
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(Group::class, 'group_id');
+    }
+
     public function getWilayaNameAttribute()
     {
         return $this->wilaya ? $this->wilaya->name : null;
