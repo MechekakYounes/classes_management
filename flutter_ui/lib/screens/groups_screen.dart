@@ -796,7 +796,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                             children: [
                                               if ((group['type_age'] ?? '').toString().isNotEmpty)
                                                 Row(children: [
-                                                  Icon(Icons.group, size: 14, color: Colors.cyan.shade700),
                                                   SizedBox(width: 4),
                                                   Text('نوع الفوج: ${group['type_age']}', style: TextStyle(fontSize: 13)),
                                                 ]),
