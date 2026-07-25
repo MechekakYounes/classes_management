@@ -42,7 +42,7 @@ public function index(Request $request, $groupId = null) {
     } else {
         // Scoping based on user role
         if ($user->hasRole('super-admin')) {
-            // no additional filters
+            // No additional scoping needed for super-admin
         } elseif ($user->hasRole('admin')) {
             $query->whereHas('group.classes.commune', function ($q) use ($user) {
                 $q->where('wilaya_id', $user->wilaya_id);
