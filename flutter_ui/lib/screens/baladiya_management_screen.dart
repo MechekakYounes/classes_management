@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart';
-import '../auth_service.dart';
-import '../main.dart'; // To navigate to MainTabController
-import 'login_screen.dart';
-import 'dashboard_screen.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
+import 'package:project_gp/main.dart'; // To navigate to MainTabController
+import 'package:project_gp/screens/auth/login_screen.dart';
+import 'package:project_gp/screens/madrasa_management_screen.dart';
 
 class BaladiyaManagementScreen extends StatefulWidget {
   final int wilayaId;
@@ -381,7 +381,7 @@ class _BaladiyaManagementScreenState extends State<BaladiyaManagementScreen> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => DashboardScreen(communeId: id, communeName: item['name']),
+                                              builder: (context) => MadrasaManagementScreen(communeId: id, communeName: item['name']),
                                             ),
                                           );
                                         },
@@ -415,3 +415,9 @@ class _BaladiyaManagementScreenState extends State<BaladiyaManagementScreen> {
     );
   }
 }
+
+
+
+
+
+

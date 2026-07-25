@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../auth_service.dart';
-import '../main.dart'; // To navigate to MainTabController
-import '../constants/wilayas.dart';
-import 'wilaya_list_screen.dart';
-import 'baladiya_management_screen.dart';
-import 'groups_screen.dart';
-import 'sessions_screen.dart';
+import 'package:project_gp/core/services/auth_service.dart';
+import 'package:project_gp/main.dart'; // To navigate to MainTabController
+import 'package:project_gp/core/constants/wilayas.dart';
+import 'package:project_gp/screens/wilaya_list_screen.dart';
+import 'package:project_gp/screens/baladiya_management_screen.dart';
+import 'package:project_gp/screens/groups_screen.dart';
+import 'package:project_gp/screens/teacher_work/sessions_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -517,3 +517,9 @@ class LoginWavePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+
+
+
+
+

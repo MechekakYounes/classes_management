@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/student_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/teacher_dashboard_screen.dart';
-import 'screens/teachers_screen.dart';
-import 'screens/managers_screen.dart';
-import 'screens/supervisors_screen.dart';
-import 'screens/admins_screen.dart';
-import 'screens/wilaya_list_screen.dart';
-import 'screens/baladiya_management_screen.dart';
-import 'screens/groups_screen.dart';
-import 'screens/sessions_screen.dart';
-import 'auth_service.dart';
+import 'package:project_gp/screens/madrasa_management_screen.dart';
+import 'package:project_gp/screens/students/student_screen.dart';
+import 'package:project_gp/screens/profile/profile_screen.dart';
+import 'package:project_gp/screens/auth/login_screen.dart';
+import 'package:project_gp/screens/teacher_work/teacher_dashboard_screen.dart';
+import 'package:project_gp/screens/users/teachers_screen.dart';
+import 'package:project_gp/screens/users/managers_screen.dart';
+import 'package:project_gp/screens/users/supervisors_screen.dart';
+import 'package:project_gp/screens/users/admins_screen.dart';
+import 'package:project_gp/screens/wilaya_list_screen.dart';
+import 'package:project_gp/screens/baladiya_management_screen.dart';
+import 'package:project_gp/screens/groups_screen.dart';
+import 'package:project_gp/screens/teacher_work/sessions_screen.dart';
+import 'package:project_gp/core/services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -89,7 +89,7 @@ class _MainTabControllerState extends State<MainTabController> {
         wilayaName: auth.wilayaName ?? "الجزائر",
       );
     } else if (auth.isSupervisor()) {
-      dashboardWidget = DashboardScreen(communeId: auth.communeId ?? widget.communeId);
+      dashboardWidget = MadrasaManagementScreen(communeId: auth.communeId ?? widget.communeId);
     } else if (auth.isManager()) {
       dashboardWidget = GroupsScreen(
         className: auth.user?['class']?['name'] ?? "المدرسة المعينة",
@@ -98,7 +98,7 @@ class _MainTabControllerState extends State<MainTabController> {
     } else if (auth.isTeacher()) {
       dashboardWidget = const TeacherDashboardScreen();
     } else {
-      dashboardWidget = DashboardScreen(communeId: widget.communeId);
+      dashboardWidget = MadrasaManagementScreen(communeId: widget.communeId);
     }
 
     Widget mainDashboardWidget = Navigator(
@@ -278,3 +278,9 @@ class WavePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+
+
+
+
+

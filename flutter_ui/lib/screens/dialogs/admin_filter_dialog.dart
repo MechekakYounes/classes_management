@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart';
-import '../auth_service.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
 
 class AdminFilterDialog extends StatefulWidget {
   final int? initialWilayaId;
@@ -87,3 +87,9 @@ class _AdminFilterDialogState extends State<AdminFilterDialog> {
     );
   }
 }
+
+
+
+
+
+

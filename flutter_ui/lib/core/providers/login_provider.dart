@@ -1,6 +1,6 @@
 // lib/core/providers/login_provider.dart
 import 'package:flutter/foundation.dart';
-import 'auth_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
 
 class LoginProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -72,3 +72,8 @@ class LoginProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+
+
+
+

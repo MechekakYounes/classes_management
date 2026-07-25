@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../auth_service.dart';
-import 'sessions_screen.dart';
+import 'package:project_gp/core/services/auth_service.dart';
+import 'package:project_gp/screens/teacher_work/sessions_screen.dart';
 
 class TeacherDashboardScreen extends StatelessWidget {
   const TeacherDashboardScreen({Key? key}) : super(key: key);
@@ -89,3 +89,9 @@ class TeacherDashboardScreen extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+

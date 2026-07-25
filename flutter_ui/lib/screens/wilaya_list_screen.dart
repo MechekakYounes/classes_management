@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../constants/wilayas.dart';
-import '../auth_service.dart';
-import 'login_screen.dart';
-import 'baladiya_management_screen.dart';
+import 'package:project_gp/core/constants/wilayas\.dart';
+import 'package:project_gp/core/services/auth_service.dart';
+import 'package:project_gp/screens/auth/login_screen.dart';
+import 'package:project_gp/screens/baladiya_management_screen.dart';
 
 class WilayaListScreen extends StatefulWidget {
   const WilayaListScreen({Key? key}) : super(key: key);
@@ -220,3 +220,9 @@ class _WilayaListScreenState extends State<WilayaListScreen> {
     );
   }
 }
+
+
+
+
+
+

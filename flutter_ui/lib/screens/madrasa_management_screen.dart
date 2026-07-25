@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../api_service.dart';
-import '../auth_service.dart';
-import 'groups_screen.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
+import 'package:project_gp/screens/groups_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
+class MadrasaManagementScreen extends StatefulWidget {
   final int? communeId;
   final String? communeName;
-  const DashboardScreen({Key? key, this.communeId, this.communeName}) : super(key: key);
+  const MadrasaManagementScreen({Key? key, this.communeId, this.communeName}) : super(key: key);
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  _MadrasaManagementScreenState createState() => _MadrasaManagementScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _MadrasaManagementScreenState extends State<MadrasaManagementScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<String> specialities = [];
   List<String> levels = [];
@@ -967,3 +967,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
+
+
+
+
+
+

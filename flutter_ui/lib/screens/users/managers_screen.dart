@@ -1,35 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart';
-import '../auth_service.dart';
-import 'admin_filter_dialog.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
+import 'package:project_gp/screens/dialogs/manager_filter_dialog.dart';
 
-class AdminsScreen extends StatefulWidget {
-  const AdminsScreen({Key? key}) : super(key: key);
+class ManagersScreen extends StatefulWidget {
+  const ManagersScreen({Key? key}) : super(key: key);
 
   @override
-  _AdminsScreenState createState() => _AdminsScreenState();
+  _ManagersScreenState createState() => _ManagersScreenState();
 }
 
-class _AdminsScreenState extends State<AdminsScreen> {
-  List<dynamic> admins = [];
-  List<dynamic> filteredAdmins = [];
+class _ManagersScreenState extends State<ManagersScreen> {
+  List<dynamic> managers = [];
+  List<dynamic> filteredManagers = [];
   bool isLoading = true;
   String? error;
 
   final TextEditingController _searchController = TextEditingController();
   String _sortBy = 'name_asc';
 
-  // User-selected filter state
+  // Role-based filter params (auto-applied from role)
   int? _filterWilayaId;
+  int? _filterCommuneId;
+
+  // User-selected filter state
+  int? _filterClassId;
   bool _hasActiveFilter = false;
 
   @override
   void initState() {
     super.initState();
-    _refreshAdmins();
+    _setupRoleBasedFilters();
+    _refreshManagers();
     _searchController.addListener(_onSearchChanged);
+  }
+
+  void _setupRoleBasedFilters() {
+    final auth = AuthService();
+    if (auth.isAdmin()) {
+      _filterWilayaId = auth.wilayaId;
+    } else if (auth.isSupervisor()) {
+      _filterCommuneId = auth.communeId;
+      _filterWilayaId = auth.wilayaId;
+    }
   }
 
   @override
@@ -38,30 +53,44 @@ class _AdminsScreenState extends State<AdminsScreen> {
     super.dispose();
   }
 
-  // SuperAdmin only sees this screen; no role-based wilaya restriction needed.
-  String get headerText => 'المشرفون الولائيون';
+  String get headerText {
+    final auth = AuthService();
+    if (auth.isSuperAdmin()) return 'جميع مدراء المدارس وطنياً';
+    if (auth.isAdmin()) return 'مدراء مدارس ولاية ${auth.wilayaName ?? ""}';
+    if (auth.isSupervisor()) return 'مدراء مدارس البلدية';
+    return 'مدراء المدارس';
+  }
 
   void _showFilterDialog() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (ctx) => AdminFilterDialog(initialWilayaId: _filterWilayaId),
+      builder: (ctx) => ManagerFilterDialog(
+        initialWilayaId: _filterWilayaId,
+        initialCommuneId: _filterCommuneId,
+        initialClassId: _filterClassId,
+      ),
     );
     if (result != null) {
       setState(() {
         _filterWilayaId  = result['wilayaId'];
-        _hasActiveFilter = result['wilayaId'] != null;
+        _filterCommuneId = result['communeId'];
+        _filterClassId   = result['classId'];
+        _hasActiveFilter = result['wilayaId'] != null || result['communeId'] != null || result['classId'] != null;
       });
-      _refreshAdmins();
+      _refreshManagers();
     }
   }
 
-  Future<void> _refreshAdmins() async {
+  Future<void> _refreshManagers() async {
     setState(() { isLoading = true; error = null; });
     try {
-      final fetched = await ApiService.getAdmins(wilayaId: _filterWilayaId);
+      final fetched = await ApiService.getManagers(
+        communeId: _filterCommuneId,
+        classId:   _filterClassId,
+      );
       setState(() {
-        admins = fetched;
-        filteredAdmins = List.from(admins);
+        managers = fetched;
+        filteredManagers = List.from(managers);
         _applySorting();
       });
     } catch (e) {
@@ -74,8 +103,8 @@ class _AdminsScreenState extends State<AdminsScreen> {
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      filteredAdmins = admins.where((a) {
-        final name = "${a['name']} ${a['username']}".toLowerCase();
+      filteredManagers = managers.where((m) {
+        final name = "${m['name']} ${m['username']}".toLowerCase();
         return name.contains(query);
       }).toList();
       _applySorting();
@@ -83,7 +112,7 @@ class _AdminsScreenState extends State<AdminsScreen> {
   }
 
   void _applySorting() {
-    filteredAdmins.sort((a, b) {
+    filteredManagers.sort((a, b) {
       final nameA = (a['name'] ?? '').toString().toLowerCase();
       final nameB = (b['name'] ?? '').toString().toLowerCase();
       return _sortBy == 'name_desc' ? nameB.compareTo(nameA) : nameA.compareTo(nameB);
@@ -95,7 +124,7 @@ class _AdminsScreenState extends State<AdminsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('ترتيب المشرفين الولائيين', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text('ترتيب المدراء', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -115,19 +144,19 @@ class _AdminsScreenState extends State<AdminsScreen> {
     );
   }
 
-  void _showAddAdminDialog() => _showAdminDialog();
-  void _showEditAdminDialog(Map<dynamic, dynamic> adm) => _showAdminDialog(admin: adm);
+  void _showAddManagerDialog() => _showManagerDialog();
+  void _showEditManagerDialog(Map<dynamic, dynamic> mgr) => _showManagerDialog(manager: mgr);
 
-  void _showAdminDialog({Map<dynamic, dynamic>? admin}) async {
-    final isEdit = admin != null;
-    final _nameController = TextEditingController(text: admin?['name'] ?? '');
-    final _usernameController = TextEditingController(text: admin?['username'] ?? '');
+  void _showManagerDialog({Map<dynamic, dynamic>? manager}) async {
+    final isEdit = manager != null;
+    final _nameController = TextEditingController(text: manager?['name'] ?? '');
+    final _usernameController = TextEditingController(text: manager?['username'] ?? '');
     final _passwordController = TextEditingController();
-    final _phoneController = TextEditingController(text: admin?['phone'] ?? '');
+    final _phoneController = TextEditingController(text: manager?['phone'] ?? '');
 
-    List<dynamic> wilayas = [];
-    int? selectedWilayaId = admin?['wilaya_id'];
-    bool isDialogLoading = true;
+    List<dynamic> unassignedSchools = [];
+    int? selectedClassId = manager?['class_id'];
+    bool isDialogLoading = !isEdit;
 
     showDialog(
       context: context,
@@ -135,8 +164,8 @@ class _AdminsScreenState extends State<AdminsScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             if (isDialogLoading) {
-              ApiService.getWilayas().then((list) {
-                setDialogState(() { wilayas = list; isDialogLoading = false; });
+              ApiService.getUnassignedSchools().then((schools) {
+                setDialogState(() { unassignedSchools = schools; isDialogLoading = false; });
               }).catchError((_) { setDialogState(() => isDialogLoading = false); });
             }
 
@@ -144,7 +173,7 @@ class _AdminsScreenState extends State<AdminsScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               title: Center(
                 child: Text(
-                  isEdit ? 'تعديل بيانات المشرف الولائي' : 'إضافة مشرف ولائي جديد',
+                  isEdit ? 'تعديل بيانات المدير' : 'إضافة مدير جديد',
                   style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.cyan.shade800),
                 ),
               ),
@@ -163,18 +192,22 @@ class _AdminsScreenState extends State<AdminsScreen> {
                       ),
                       _buildTextField(_phoneController, 'رقم الهاتف (اختياري)', icon: FontAwesomeIcons.phone, keyboardType: TextInputType.phone),
                       SizedBox(height: 12),
-                      isDialogLoading
-                          ? Center(child: CircularProgressIndicator())
-                          : DropdownButtonFormField<int>(
-                              value: selectedWilayaId,
-                              decoration: InputDecoration(
-                                labelText: 'الولاية المخصصة *',
-                                prefixIcon: Icon(FontAwesomeIcons.mapLocationDot, color: Colors.cyan, size: 18),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      if (!isEdit)
+                        isDialogLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : DropdownButtonFormField<int>(
+                                value: selectedClassId,
+                                decoration: InputDecoration(
+                                  labelText: 'المدرسة المخصصة',
+                                  prefixIcon: Icon(FontAwesomeIcons.school, color: Colors.cyan, size: 18),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                items: [
+                                  DropdownMenuItem<int>(value: null, child: Text('بدون مدرسة (تعيين لاحقاً)', style: TextStyle(color: Colors.grey))),
+                                  ...unassignedSchools.map((s) => DropdownMenuItem<int>(value: s['id'], child: Text(s['name'] ?? 'مدرسة'))).toList(),
+                                ],
+                                onChanged: (val) => setDialogState(() => selectedClassId = val),
                               ),
-                              items: wilayas.map((w) => DropdownMenuItem<int>(value: w['id'], child: Text(w['name'] ?? 'ولاية'))).toList(),
-                              onChanged: (val) => setDialogState(() => selectedWilayaId = val),
-                            ),
                     ],
                   ),
                 ),
@@ -193,26 +226,22 @@ class _AdminsScreenState extends State<AdminsScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى إدخال كلمة المرور')));
                       return;
                     }
-                    if (selectedWilayaId == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى اختيار الولاية')));
-                      return;
-                    }
 
                     final data = <String, dynamic>{
-                      'name':      _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : _usernameController.text.trim(),
-                      'username':  _usernameController.text.trim(),
-                      'phone':     _phoneController.text.trim(),
-                      'wilaya_id': selectedWilayaId,
+                      'name':     _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : _usernameController.text.trim(),
+                      'username': _usernameController.text.trim(),
+                      'phone':    _phoneController.text.trim(),
+                      'class_id': selectedClassId,
                     };
                     if (_passwordController.text.trim().isNotEmpty) data['password'] = _passwordController.text.trim();
 
                     try {
                       if (isEdit) {
-                        await ApiService.updateAdmin(admin!['id'], data);
+                        await ApiService.updateManager(manager!['id'], data);
                       } else {
-                        await ApiService.createAdmin(data);
+                        await ApiService.createManager(data);
                       }
-                      _refreshAdmins();
+                      _refreshManagers();
                       Navigator.pop(context);
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
@@ -227,13 +256,13 @@ class _AdminsScreenState extends State<AdminsScreen> {
     );
   }
 
-  void _deleteAdmin(int id) async {
+  void _deleteManager(int id) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('تأكيد الحذف', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text('هل أنت متأكد من حذف هذا المشرف الولائي؟'),
+        content: Text('هل أنت متأكد من حذف هذا المدير؟'),
         actions: [
           TextButton(child: Text('إلغاء'), onPressed: () => Navigator.pop(ctx, false)),
           ElevatedButton(
@@ -246,8 +275,8 @@ class _AdminsScreenState extends State<AdminsScreen> {
     );
     if (confirm == true) {
       try {
-        await ApiService.deleteAdmin(id);
-        _refreshAdmins();
+        await ApiService.deleteManager(id);
+        _refreshManagers();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل الحذف: $e')));
       }
@@ -290,7 +319,7 @@ class _AdminsScreenState extends State<AdminsScreen> {
           : error != null
               ? Center(child: Text('خطأ: $error'))
               : RefreshIndicator(
-                  onRefresh: _refreshAdmins,
+                  onRefresh: _refreshManagers,
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Column(
@@ -301,13 +330,13 @@ class _AdminsScreenState extends State<AdminsScreen> {
                               child: TextField(
                                 controller: _searchController,
                                 decoration: InputDecoration(
-                                  hintText: 'البحث عن مشرف ولائي...',
+                                  hintText: 'البحث عن مدير...',
                                   prefixIcon: Icon(FontAwesomeIcons.search, color: Colors.cyan, size: 18),
                                   suffixIcon: _searchController.text.isNotEmpty
                                       ? IconButton(
                                           icon: Icon(FontAwesomeIcons.xmark, color: Colors.blueGrey.shade700, size: 16),
                                           onPressed: () {
-                                            setState(() { _searchController.clear(); filteredAdmins = List.from(admins); _applySorting(); });
+                                            setState(() { _searchController.clear(); filteredManagers = List.from(managers); _applySorting(); });
                                           },
                                         )
                                       : null,
@@ -347,9 +376,9 @@ class _AdminsScreenState extends State<AdminsScreen> {
                             Container(
                               height: 45,
                               child: ElevatedButton.icon(
-                                onPressed: _showAddAdminDialog,
+                                onPressed: _showAddManagerDialog,
                                 icon: Icon(FontAwesomeIcons.plus, size: 16),
-                                label: Text('إضافة مشرف ولائي', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15)),
+                                label: Text('إضافة مدير', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15)),
                                 style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                               ),
                             ),
@@ -357,20 +386,20 @@ class _AdminsScreenState extends State<AdminsScreen> {
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(color: Colors.cyan.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.cyan.shade200)),
-                              child: Text('${filteredAdmins.length} مشرف ولائي', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.cyan.shade800)),
+                              child: Text('${filteredManagers.length} مدير', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.cyan.shade800)),
                             ),
                           ],
                         ),
                         SizedBox(height: 16),
                         Expanded(
-                          child: filteredAdmins.isEmpty
-                              ? Center(child: Text('لا يوجد مشرفون ولائيون', style: TextStyle(color: Colors.grey)))
+                          child: filteredManagers.isEmpty
+                              ? Center(child: Text('لا يوجد مدراء', style: TextStyle(color: Colors.grey)))
                               : ListView.builder(
-                                  itemCount: filteredAdmins.length,
+                                  itemCount: filteredManagers.length,
                                   itemBuilder: (context, index) {
-                                    final adm = filteredAdmins[index];
-                                    final admName = adm['name'] ?? adm['username'] ?? 'مجهول';
-                                    final wilayaName = adm['wilaya']?['name'] ?? 'غير مخصص';
+                                    final mgr = filteredManagers[index];
+                                    final mgrName = mgr['name'] ?? mgr['username'] ?? 'مجهول';
+                                    final schoolName = mgr['class']?['name'] ?? 'بدون مدرسة مخصصة';
                                     return Card(
                                       margin: EdgeInsets.only(bottom: 12),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -378,21 +407,21 @@ class _AdminsScreenState extends State<AdminsScreen> {
                                       child: ListTile(
                                         leading: CircleAvatar(
                                           backgroundColor: Colors.cyan.shade100,
-                                          child: Icon(FontAwesomeIcons.userGraduate, color: Colors.cyan.shade800),
+                                          child: Icon(FontAwesomeIcons.userTie, color: Colors.cyan.shade800),
                                         ),
-                                        title: Text(admName, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                                        subtitle: Text("الولاية: $wilayaName\nاسم المستخدم: ${adm['username'] ?? 'N/A'}"),
+                                        title: Text(mgrName, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                                        subtitle: Text("المدرسة: $schoolName\nاسم المستخدم: ${mgr['username'] ?? 'N/A'}"),
                                         isThreeLine: true,
                                         trailing: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             IconButton(
                                               icon: Icon(FontAwesomeIcons.pen, color: Colors.blue, size: 18),
-                                              onPressed: () => _showEditAdminDialog(adm),
+                                              onPressed: () => _showEditManagerDialog(mgr),
                                             ),
                                             IconButton(
                                               icon: Icon(FontAwesomeIcons.trash, color: Colors.red, size: 18),
-                                              onPressed: () => _deleteAdmin(adm['id']),
+                                              onPressed: () => _deleteManager(mgr['id']),
                                             ),
                                           ],
                                         ),
@@ -408,3 +437,9 @@ class _AdminsScreenState extends State<AdminsScreen> {
     );
   }
 }
+
+
+
+
+
+

@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
 
-import '../api_service.dart';
-import 'attendance_screen.dart';
-import 'students_group_screen.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/screens/teacher_work/attendance_screen.dart';
+import 'package:project_gp/screens/teacher_work/students_group_screen.dart';
 
 class SessionScreen extends StatefulWidget {
   final String groupName;
@@ -212,7 +212,7 @@ class _SessionScreenState extends State<SessionScreen>
     );
   }
 
-  // Consistent dropdown field styling with DashboardScreen
+  // Consistent dropdown field styling with MadrasaManagementScreen
   Widget _buildDropdownField({
     required String label,
     required dynamic value,
@@ -1121,3 +1121,9 @@ class WavePainter extends CustomPainter {
     return true;
   }
 }
+
+
+
+
+
+
