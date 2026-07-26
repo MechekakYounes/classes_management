@@ -58,3 +58,9 @@ const Map<int, String> algerianWilayas = {
   57: "المغير",
   58: "المنيعة"
 };
+
+
+
+
+
+

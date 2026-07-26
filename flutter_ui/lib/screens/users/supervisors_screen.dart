@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart';
-import '../auth_service.dart';
-import 'supervisor_filter_dialog.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
+import 'package:project_gp/screens/dialogs/supervisor_filter_dialog.dart';
 
 class SupervisorsScreen extends StatefulWidget {
   const SupervisorsScreen({Key? key}) : super(key: key);
@@ -433,3 +433,9 @@ class _SupervisorsScreenState extends State<SupervisorsScreen> {
     );
   }
 }
+
+
+
+
+
+

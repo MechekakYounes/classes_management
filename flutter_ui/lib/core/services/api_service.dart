@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
-import 'auth_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
 
 
 class ApiException implements Exception {
@@ -1155,3 +1155,8 @@ class ApiService {
     }
   }
 }
+
+
+
+
+

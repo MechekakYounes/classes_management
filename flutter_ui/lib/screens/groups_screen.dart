@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../api_service.dart';
-import 'sessions_screen.dart'; // Assuming SessionsScreen exists
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/screens/teacher_work/sessions_screen.dart'; // Assuming SessionsScreen exists
 
 class GroupsScreen extends StatefulWidget {
   final String className;
@@ -880,3 +880,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
     );
   }
 }
+
+
+
+
+
+

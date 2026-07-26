@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart';
-import '../excel_service.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/excel_service.dart';
 
 class StudentsGroupScreen extends StatefulWidget {
   final int groupId;
@@ -735,3 +735,9 @@ class _StudentsGroupScreenState extends State<StudentsGroupScreen> {
     );
   }
 }
+
+
+
+
+
+

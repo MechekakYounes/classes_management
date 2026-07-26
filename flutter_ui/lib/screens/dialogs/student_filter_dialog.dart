@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart';
-import '../auth_service.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
 
-class TeacherFilterDialog extends StatefulWidget {
+class StudentFilterDialog extends StatefulWidget {
   final int? initialWilayaId;
   final int? initialCommuneId;
   final int? initialClassId;
   final int? initialGroupId;
 
-  const TeacherFilterDialog({
+  const StudentFilterDialog({
     Key? key,
     this.initialWilayaId,
     this.initialCommuneId,
@@ -19,10 +18,10 @@ class TeacherFilterDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _TeacherFilterDialogState createState() => _TeacherFilterDialogState();
+  _StudentFilterDialogState createState() => _StudentFilterDialogState();
 }
 
-class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
+class _StudentFilterDialogState extends State<StudentFilterDialog> {
   bool _isLoading = false;
 
   final auth = AuthService();
@@ -37,10 +36,12 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
   List<dynamic> communes = [];
   List<dynamic> classes = [];
   List<dynamic> groups = [];
+  List<dynamic> teachers = [];
 
   bool lockWilaya = false;
   bool lockCommune = false;
   bool lockClass = false;
+  bool lockTeacher = false;
   bool lockGroup = false;
 
   @override
@@ -68,6 +69,10 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
       lockClass = true;
       _selectedClassId = auth.classId;
     }
+    if (auth.isTeacher()) {
+      lockTeacher = true;
+      _selectedTeacherId = auth.user?['id'];
+    }
   }
 
   Future<void> _loadInitialData() async {
@@ -84,6 +89,9 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
       if (_selectedClassId != null) {
         if (!lockGroup) groups = await ApiService.getGroupsByClass(_selectedClassId!);
       }
+      if (_selectedGroupId != null) {
+        if (!lockTeacher) teachers = await ApiService.getTeachers(groupId: _selectedGroupId);
+      }
     } catch (e) {
       print(e);
     } finally {
@@ -98,9 +106,11 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
       _selectedCommuneId = null;
       _selectedClassId = null;
       _selectedGroupId = null;
+      _selectedTeacherId = null;
       communes = [];
       classes = [];
       groups = [];
+      teachers = [];
       _isLoading = true;
     });
     try {
@@ -116,8 +126,10 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
       _selectedCommuneId = newId;
       _selectedClassId = null;
       _selectedGroupId = null;
+      _selectedTeacherId = null;
       classes = [];
       groups = [];
+      teachers = [];
       _isLoading = true;
     });
     try {
@@ -132,7 +144,9 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
     setState(() {
       _selectedClassId = newId;
       _selectedGroupId = null;
+      _selectedTeacherId = null;
       groups = [];
+      teachers = [];
       _isLoading = true;
     });
     try {
@@ -146,7 +160,15 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
     if (newId == null) return;
     setState(() {
       _selectedGroupId = newId;
+      _selectedTeacherId = null;
+      teachers = [];
+      _isLoading = true;
     });
+    try {
+      teachers = await ApiService.getTeachers(groupId: newId);
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _applyFilters() {
@@ -178,7 +200,7 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Filter Teachers',
+              'Filter Students',
               style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.cyan.shade800),
               textAlign: TextAlign.center,
             ),
@@ -202,7 +224,11 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
                             SizedBox(height: 12),
                           ],
                           if (!lockGroup) ...[
-                            _buildDropdown('Group', _selectedGroupId, groups, _onGroupChanged),
+                            _buildDropdown('Student Group', _selectedGroupId, groups, _onGroupChanged),
+                            SizedBox(height: 12),
+                          ],
+                          if (!lockTeacher) ...[
+                            _buildDropdown('Teacher', _selectedTeacherId, teachers, (v) => setState(() => _selectedTeacherId = v)),
                             SizedBox(height: 12),
                           ],
                         ],
@@ -255,3 +281,9 @@ class _TeacherFilterDialogState extends State<TeacherFilterDialog> {
     );
   }
 }
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'api_service.dart';
+import 'package:project_gp/core/services/api_service.dart';
 
 class AuthService extends ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
@@ -289,3 +289,8 @@ bool isTeacher() => _roleName == 'teacher';
 
   
 }
+
+
+
+
+

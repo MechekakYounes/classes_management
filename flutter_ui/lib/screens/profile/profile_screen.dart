@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart' show ApiService;
-import 'login_screen.dart';
-import '../auth_service.dart' show AuthService;
+import 'package:project_gp/core/services/api_service.dart' show ApiService;
+import 'package:project_gp/screens/auth/login_screen.dart';
+import 'package:project_gp/core/services/auth_service.dart' show AuthService;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -597,3 +597,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+
+
+
+
+

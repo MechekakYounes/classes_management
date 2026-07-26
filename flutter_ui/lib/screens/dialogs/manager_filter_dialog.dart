@@ -1,48 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../api_service.dart';
-import '../auth_service.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
 
-class SupervisorFilterDialog extends StatefulWidget {
+class ManagerFilterDialog extends StatefulWidget {
   final int? initialWilayaId;
   final int? initialCommuneId;
+  final int? initialClassId;
 
-  const SupervisorFilterDialog({
+  const ManagerFilterDialog({
     Key? key,
     this.initialWilayaId,
     this.initialCommuneId,
+    this.initialClassId,
   }) : super(key: key);
 
   @override
-  _SupervisorFilterDialogState createState() => _SupervisorFilterDialogState();
+  _ManagerFilterDialogState createState() => _ManagerFilterDialogState();
 }
 
-class _SupervisorFilterDialogState extends State<SupervisorFilterDialog> {
+class _ManagerFilterDialogState extends State<ManagerFilterDialog> {
   bool _isLoading = false;
   final auth = AuthService();
 
   int? _selectedWilayaId;
   int? _selectedCommuneId;
+  int? _selectedClassId;
 
   List<dynamic> wilayas = [];
   List<dynamic> communes = [];
+  List<dynamic> classes = [];
 
   bool lockWilaya = false;
+  bool lockCommune = false;
 
   @override
   void initState() {
     super.initState();
     _selectedWilayaId = widget.initialWilayaId;
     _selectedCommuneId = widget.initialCommuneId;
+    _selectedClassId = widget.initialClassId;
     _setupRoleLocks();
     _loadInitialData();
   }
 
   void _setupRoleLocks() {
-    if (auth.isAdmin()) {
+    if (auth.isAdmin() || auth.isSupervisor()) {
       lockWilaya = true;
       _selectedWilayaId = auth.wilayaId;
+    }
+    if (auth.isSupervisor()) {
+      lockCommune = true;
+      _selectedCommuneId = auth.communeId;
     }
   }
 
@@ -50,8 +60,11 @@ class _SupervisorFilterDialogState extends State<SupervisorFilterDialog> {
     setState(() => _isLoading = true);
     try {
       if (!lockWilaya) wilayas = await ApiService.getWilayas();
-      if (_selectedWilayaId != null) {
+      if (_selectedWilayaId != null && !lockCommune) {
         communes = await ApiService.getCommunesByWilaya(_selectedWilayaId!);
+      }
+      if (_selectedCommuneId != null) {
+        classes = await ApiService.getClasses(communeId: _selectedCommuneId);
       }
     } catch (_) {}
     setState(() => _isLoading = false);
@@ -61,11 +74,27 @@ class _SupervisorFilterDialogState extends State<SupervisorFilterDialog> {
     setState(() {
       _selectedWilayaId = newId;
       _selectedCommuneId = null;
+      _selectedClassId = null;
       communes = [];
+      classes = [];
       _isLoading = true;
     });
     try {
       if (newId != null) communes = await ApiService.getCommunesByWilaya(newId);
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _onCommuneChanged(int? newId) async {
+    setState(() {
+      _selectedCommuneId = newId;
+      _selectedClassId = null;
+      classes = [];
+      _isLoading = true;
+    });
+    try {
+      if (newId != null) classes = await ApiService.getClasses(communeId: newId);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -79,7 +108,7 @@ class _SupervisorFilterDialogState extends State<SupervisorFilterDialog> {
         children: [
           Icon(FontAwesomeIcons.sliders, color: Colors.cyan, size: 20),
           SizedBox(width: 10),
-          Text('تصفية المشرفين البلديين', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          Text('تصفية المدراء', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         ],
       ),
       content: _isLoading
@@ -111,21 +140,42 @@ class _SupervisorFilterDialogState extends State<SupervisorFilterDialog> {
                   ],
 
                   // Commune
-                  Text('البلدية', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.blueGrey)),
+                  if (!lockCommune) ...[
+                    Text('البلدية', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.blueGrey)),
+                    SizedBox(height: 4),
+                    DropdownButtonFormField<int>(
+                      value: _selectedCommuneId,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(FontAwesomeIcons.locationDot, color: Colors.cyan, size: 16),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        hintText: 'كل البلديات',
+                      ),
+                      items: [
+                        DropdownMenuItem(value: null, child: Text('كل البلديات')),
+                        ...communes.map((c) => DropdownMenuItem<int>(value: c['id'], child: Text(c['name'] ?? ''))),
+                      ],
+                      onChanged: communes.isEmpty ? null : (val) => _onCommuneChanged(val),
+                    ),
+                    SizedBox(height: 12),
+                  ],
+
+                  // School / Class
+                  Text('المدرسة', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.blueGrey)),
                   SizedBox(height: 4),
                   DropdownButtonFormField<int>(
-                    value: _selectedCommuneId,
+                    value: _selectedClassId,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(FontAwesomeIcons.locationDot, color: Colors.cyan, size: 16),
+                      prefixIcon: Icon(FontAwesomeIcons.school, color: Colors.cyan, size: 16),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      hintText: 'كل البلديات',
+                      hintText: 'كل المدارس',
                     ),
                     items: [
-                      DropdownMenuItem(value: null, child: Text('كل البلديات')),
-                      ...communes.map((c) => DropdownMenuItem<int>(value: c['id'], child: Text(c['name'] ?? ''))),
+                      DropdownMenuItem(value: null, child: Text('كل المدارس')),
+                      ...classes.map((c) => DropdownMenuItem<int>(value: c['id'], child: Text(c['name'] ?? ''))),
                     ],
-                    onChanged: communes.isEmpty ? null : (val) => setState(() => _selectedCommuneId = val),
+                    onChanged: classes.isEmpty ? null : (val) => setState(() => _selectedClassId = val),
                   ),
                 ],
               ),
@@ -134,7 +184,7 @@ class _SupervisorFilterDialogState extends State<SupervisorFilterDialog> {
         TextButton(
           child: Text('إعادة ضبط', style: TextStyle(color: Colors.red)),
           onPressed: () => Navigator.pop(context, <String, dynamic>{
-            'wilayaId': null, 'communeId': null,
+            'wilayaId': null, 'communeId': null, 'classId': null,
           }),
         ),
         ElevatedButton(
@@ -146,9 +196,16 @@ class _SupervisorFilterDialogState extends State<SupervisorFilterDialog> {
           onPressed: () => Navigator.pop(context, {
             'wilayaId': _selectedWilayaId,
             'communeId': _selectedCommuneId,
+            'classId': _selectedClassId,
           }),
         ),
       ],
     );
   }
 }
+
+
+
+
+
+

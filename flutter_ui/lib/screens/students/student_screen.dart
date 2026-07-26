@@ -1,61 +1,42 @@
 import 'package:flutter/material.dart';
-import '../api_service.dart';
-import '../auth_service.dart';
+import 'package:project_gp/core/services/api_service.dart';
+import 'package:project_gp/core/services/auth_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'teacher_filter_dialog.dart';
+import 'package:project_gp/screens/dialogs/add_student_dialog.dart';
+import 'package:project_gp/screens/dialogs/student_filter_dialog.dart';
 
-class TeachersScreen extends StatefulWidget {
-  const TeachersScreen({Key? key}) : super(key: key);
+class StudentsScreen extends StatefulWidget {
+  const StudentsScreen({Key? key}) : super(key: key);
 
   @override
-  _TeachersScreenState createState() => _TeachersScreenState();
+  _StudentsScreenState createState() => _StudentsScreenState();
 }
 
-class _TeachersScreenState extends State<TeachersScreen> {
-  List<dynamic> teachers = [];
-  List<dynamic> filteredTeachers = [];
+class _StudentsScreenState extends State<StudentsScreen> {
   bool isLoading = true;
   String? error;
-
+  List<dynamic> students = [];
+  List<dynamic> filteredStudents = [];
   final TextEditingController _searchController = TextEditingController();
+  String _sortBy = '';
 
+  // Active filters
   int? _filterWilayaId;
   int? _filterCommuneId;
   int? _filterClassId;
   int? _filterGroupId;
 
-  String _sortBy = 'name_asc';
+  String headerText = "Students";
 
   @override
   void initState() {
     super.initState();
-    _setupRoleBasedFilters();
-    _refreshTeachers();
-    _searchController.addListener(_onSearchChanged);
-  }
-
-  void _setupRoleBasedFilters() {
-    final auth = AuthService();
-    if (auth.isAdmin()) {
-      _filterWilayaId = auth.wilayaId;
-    } else if (auth.isSupervisor()) {
-      _filterCommuneId = auth.communeId;
-      _filterWilayaId = auth.wilayaId;
-    } else if (auth.isManager() || auth.isTeacher()) {
-      _filterClassId = auth.classId;
-      _filterCommuneId = auth.communeId;
-      _filterWilayaId = auth.wilayaId;
-    }
-  }
-
-  String get headerText {
-    final auth = AuthService();
-    if (auth.isSuperAdmin()) return 'All Teachers Nationwide';
-    if (auth.isAdmin()) return 'Teachers in ${auth.wilayaName ?? "Wilaya"}';
-    if (auth.isSupervisor()) return 'Teachers in Baladiya';
-    if (auth.isManager()) return 'Teachers in ${auth.user?['class']?['name'] ?? "School"}';
-    return 'My Teachers';
+    _setupHeader();
+    _refreshStudents();
+    _searchController.addListener(() {
+      _filterStudents(_searchController.text);
+    });
   }
 
   @override
@@ -64,54 +45,80 @@ class _TeachersScreenState extends State<TeachersScreen> {
     super.dispose();
   }
 
-  Future<void> _refreshTeachers() async {
+  void _setupHeader() {
+    final auth = AuthService();
+    if (auth.isSuperAdmin()) {
+      headerText = "All Students (Nationwide)";
+    } else if (auth.isAdmin()) {
+      headerText = "Students - ${auth.wilayaName ?? 'Wilaya'}";
+    } else if (auth.isSupervisor()) {
+      headerText = "Students - ${auth.communeName ?? 'Baladiya'}";
+    } else if (auth.isManager()) {
+      headerText = "Students - School";
+    } else if (auth.isTeacher()) {
+      headerText = "Students - Group";
+    }
+  }
+
+  Future<void> _refreshStudents() async {
     setState(() {
       isLoading = true;
       error = null;
     });
 
     try {
-      final fetchedTeachers = await ApiService.getTeachers(
+      students = await ApiService.getStudents(
         wilayaId: _filterWilayaId,
         communeId: _filterCommuneId,
         classId: _filterClassId,
         groupId: _filterGroupId,
       );
-      setState(() {
-        teachers = fetchedTeachers;
-        filteredTeachers = List.from(teachers);
-        _applySorting();
-      });
+      filteredStudents = List.from(students);
+      _applySorting();
     } catch (e) {
-      setState(() => error = e.toString());
+      error = e.toString();
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
-  void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      filteredTeachers = teachers.where((teacher) {
-        final name = "${teacher['name']} ${teacher['username']}".toLowerCase();
-        return name.contains(query);
-      }).toList();
+  void _filterStudents(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        filteredStudents = List.from(students);
+      });
       _applySorting();
+      return;
+    }
+
+    final lowerQuery = query.toLowerCase();
+    setState(() {
+      filteredStudents = students.where((student) {
+        final firstName = (student['fname'] ?? '').toString().toLowerCase();
+        final lastName = (student['name'] ?? '').toString().toLowerCase();
+        return firstName.contains(lowerQuery) || lastName.contains(lowerQuery);
+      }).toList();
     });
   }
 
   void _applySorting() {
-    filteredTeachers.sort((a, b) {
-      final nameA = (a['name'] ?? '').toString().toLowerCase();
-      final nameB = (b['name'] ?? '').toString().toLowerCase();
-
-      switch (_sortBy) {
-        case 'name_asc':
+    setState(() {
+      if (_sortBy == 'name_asc') {
+        filteredStudents.sort((a, b) {
+          final nameA = '${a['fname']} ${a['name']}'.toLowerCase();
+          final nameB = '${b['fname']} ${b['name']}'.toLowerCase();
           return nameA.compareTo(nameB);
-        case 'name_desc':
+        });
+      } else if (_sortBy == 'name_desc') {
+        filteredStudents.sort((a, b) {
+          final nameA = '${a['fname']} ${a['name']}'.toLowerCase();
+          final nameB = '${b['fname']} ${b['name']}'.toLowerCase();
           return nameB.compareTo(nameA);
-        default:
-          return 0;
+        });
       }
     });
   }
@@ -119,40 +126,101 @@ class _TeachersScreenState extends State<TeachersScreen> {
   void _showSortDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Sort Teachers', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text('Name (A-Z)'),
-              trailing: _sortBy == 'name_asc' ? Icon(Icons.check, color: Colors.cyan) : null,
-              onTap: () {
-                setState(() => _sortBy = 'name_asc');
-                _applySorting();
-                Navigator.pop(context);
-              },
+      builder: (context) {
+        String tempSortBy = _sortBy;
+
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Sort Options',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Sort By',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                value: tempSortBy.isEmpty ? null : tempSortBy,
+                items: [
+                  DropdownMenuItem(value: '', child: Text('Default')),
+                  DropdownMenuItem(
+                      value: 'name_asc', child: Text('Name (A-Z)')),
+                  DropdownMenuItem(
+                      value: 'name_desc', child: Text('Name (Z-A)')),
+                ],
+                onChanged: (value) => tempSortBy = value ?? '',
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
             ),
-            ListTile(
-              title: Text('Name (Z-A)'),
-              trailing: _sortBy == 'name_desc' ? Icon(Icons.check, color: Colors.cyan) : null,
-              onTap: () {
-                setState(() => _sortBy = 'name_desc');
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _sortBy = tempSortBy;
+                });
                 _applySorting();
                 Navigator.pop(context);
               },
+              child: Text('Apply'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.cyan,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ],
-        ),
+        );
+      },
+    );
+  }
+
+  void _deleteStudent(int id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Student'),
+        content: Text('Are you sure you want to delete this student?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('Delete'),
+          ),
+        ],
       ),
     );
+
+    if (confirm == true) {
+      try {
+        await ApiService.deleteStudent(id);
+        _refreshStudents();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Student deleted successfully.')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete student: $e')),
+        );
+      }
+    }
   }
 
   void _showFilterDialog() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => TeacherFilterDialog(
+      builder: (context) => StudentFilterDialog(
         initialWilayaId: _filterWilayaId,
         initialCommuneId: _filterCommuneId,
         initialClassId: _filterClassId,
@@ -166,145 +234,21 @@ class _TeachersScreenState extends State<TeachersScreen> {
         _filterCommuneId = result['communeId'];
         _filterClassId = result['classId'];
         _filterGroupId = result['groupId'];
+        // Note: Teacher ID isn't handled by backend API in getStudents yet, so skipping it for now, 
+        // or we could add it to ApiService if needed.
       });
-      _refreshTeachers();
+      _refreshStudents();
     }
   }
 
-  void _showAddEditTeacherDialog({Map<String, dynamic>? teacher}) {
-    final isEdit = teacher != null;
-    final _nameController = TextEditingController(text: teacher?['name'] ?? '');
-    final _usernameController = TextEditingController(text: teacher?['username'] ?? '');
-    final _passwordController = TextEditingController();
-    final _phoneController = TextEditingController(text: teacher?['phone'] ?? '');
-
-    showDialog(
+  void _showAddEditStudentDialog({Map<String, dynamic>? student}) async {
+    final result = await showDialog<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Center(
-            child: Text(
-              isEdit ? 'تعديل بيانات المعلم' : 'إضافة معلم جديد',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.cyan.shade800),
-            ),
-          ),
-          content: Container(
-            width: MediaQuery.of(context).size.width * 0.85,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildDialogTextField(_nameController, 'الاسم الكامل *', icon: FontAwesomeIcons.user),
-                  _buildDialogTextField(_usernameController, 'اسم المستخدم *', icon: FontAwesomeIcons.at),
-                  _buildDialogTextField(
-                    _passwordController,
-                    isEdit ? 'كلمة المرور (اترك فارغاً لعدم التغيير)' : 'كلمة المرور *',
-                    icon: FontAwesomeIcons.lock,
-                    obscureText: true,
-                  ),
-                  _buildDialogTextField(_phoneController, 'رقم الهاتف (اختياري)', icon: FontAwesomeIcons.phone, keyboardType: TextInputType.phone),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text('إلغاء', style: TextStyle(color: Colors.grey)),
-              onPressed: () => Navigator.pop(context),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.cyan,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text(isEdit ? 'حفظ' : 'إنشاء الحساب', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              onPressed: () async {
-                if (_usernameController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى إدخال اسم المستخدم')));
-                  return;
-                }
-                if (!isEdit && _passwordController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى إدخال كلمة المرور')));
-                  return;
-                }
-
-                final data = <String, dynamic>{
-                  'name':     _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : _usernameController.text.trim(),
-                  'username': _usernameController.text.trim(),
-                  'phone':    _phoneController.text.trim(),
-                };
-                if (_passwordController.text.trim().isNotEmpty) {
-                  data['password'] = _passwordController.text.trim();
-                }
-
-                try {
-                  if (isEdit) {
-                    await ApiService.updateTeacher(teacher!['id'], data);
-                  } else {
-                    await ApiService.createTeacher(data);
-                  }
-                  _refreshTeachers();
-                  Navigator.pop(context);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
-                }
-              },
-            ),
-          ],
-        );
-      },
+      builder: (context) => AddEditStudentDialog(student: student),
     );
-  }
-
-  void _deleteTeacher(int id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('تأكيد الحذف', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text('هل أنت متأكد من حذف هذا المعلم؟ لا يمكن التراجع عن هذا الإجراء.'),
-        actions: [
-          TextButton(child: Text('إلغاء'), onPressed: () => Navigator.pop(ctx, false)),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('حذف', style: TextStyle(color: Colors.white)),
-            onPressed: () => Navigator.pop(ctx, true),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      try {
-        await ApiService.deleteTeacher(id);
-        _refreshTeachers();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل الحذف: $e')));
-      }
+    if (result == true) {
+      _refreshStudents();
     }
-  }
-
-  Widget _buildDialogTextField(
-    TextEditingController controller,
-    String label, {
-    IconData? icon,
-    TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: icon != null ? Icon(icon, color: Colors.cyan, size: 18) : null,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        ),
-      ),
-    );
   }
 
   @override
@@ -323,7 +267,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
           : error != null
               ? Center(child: Text('Error: $error'))
               : RefreshIndicator(
-                  onRefresh: _refreshTeachers,
+                  onRefresh: _refreshStudents,
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Column(
@@ -334,7 +278,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
                               child: TextField(
                                 controller: _searchController,
                                 decoration: InputDecoration(
-                                  hintText: 'Search teachers...',
+                                  hintText: 'Search students...',
                                   prefixIcon: Icon(FontAwesomeIcons.search,
                                       color: Colors.cyan, size: 18),
                                   suffixIcon: _searchController.text.isNotEmpty
@@ -345,7 +289,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
                                           onPressed: () {
                                             setState(() {
                                               _searchController.clear();
-                                              filteredTeachers = List.from(teachers);
+                                              filteredStudents = List.from(students);
                                               _applySorting();
                                             });
                                           },
@@ -408,10 +352,10 @@ class _TeachersScreenState extends State<TeachersScreen> {
                             Container(
                               height: 45,
                               child: ElevatedButton.icon(
-                                onPressed: () => _showAddEditTeacherDialog(),
+                                onPressed: () => _showAddEditStudentDialog(),
                                 icon: Icon(FontAwesomeIcons.plus, size: 16),
                                 label: Text(
-                                  'إضافة معلم',
+                                  'إضافة تلميذ',
                                   style: GoogleFonts.poppins(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
@@ -435,7 +379,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
                                 border: Border.all(color: Colors.cyan.shade200),
                               ),
                               child: Text(
-                                '${filteredTeachers.length} معلم',
+                                '${filteredStudents.length} تلميذ',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -447,33 +391,35 @@ class _TeachersScreenState extends State<TeachersScreen> {
                         ),
                         SizedBox(height: 16),
                         Expanded(
-                          child: filteredTeachers.isEmpty
+                          child: filteredStudents.isEmpty
                               ? Center(
-                                  child: Text('No teachers found',
+                                  child: Text('No students found',
                                       style: TextStyle(color: Colors.grey)),
                                 )
                               : ListView.builder(
-                                  itemCount: filteredTeachers.length,
+                                  itemCount: filteredStudents.length,
                                   itemBuilder: (context, index) {
-                                    final teacher = filteredTeachers[index];
-                                    final teacherName = teacher['name'] ?? 'Unknown';
+                                    final student = filteredStudents[index];
+                                    final studentName =
+                                        "${student['fname']} ${student['name']}";
                                     return Card(
                                       margin: EdgeInsets.only(bottom: 12),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius:
+                                            BorderRadius.circular(16),
                                       ),
                                       elevation: 2,
                                       child: ListTile(
                                         leading: CircleAvatar(
                                           backgroundColor: Colors.cyan.shade100,
-                                          child: Icon(FontAwesomeIcons.userTie,
+                                          child: Icon(FontAwesomeIcons.user,
                                               color: Colors.cyan.shade800),
                                         ),
-                                        title: Text(teacherName,
+                                        title: Text(studentName,
                                             style: GoogleFonts.poppins(
                                                 fontWeight: FontWeight.bold)),
                                         subtitle: Text(
-                                            "Group: ${teacher['group']?['name'] ?? 'N/A'}\nSchool: ${teacher['class']?['name'] ?? 'N/A'}"),
+                                            "Group: ${student['group_name'] ?? 'N/A'}\nSchool: ${student['class_name'] ?? 'N/A'}"),
                                         isThreeLine: true,
                                         trailing: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -482,14 +428,14 @@ class _TeachersScreenState extends State<TeachersScreen> {
                                               icon: Icon(FontAwesomeIcons.pen,
                                                   color: Colors.blue, size: 20),
                                               onPressed: () =>
-                                                  _showAddEditTeacherDialog(
-                                                      teacher: teacher),
+                                                  _showAddEditStudentDialog(
+                                                      student: student),
                                             ),
                                             IconButton(
                                               icon: Icon(FontAwesomeIcons.trash,
                                                   color: Colors.red, size: 20),
                                               onPressed: () =>
-                                                  _deleteTeacher(teacher['id']),
+                                                  _deleteStudent(student['id']),
                                             ),
                                           ],
                                         ),
@@ -505,3 +451,9 @@ class _TeachersScreenState extends State<TeachersScreen> {
     );
   }
 }
+
+
+
+
+
+
