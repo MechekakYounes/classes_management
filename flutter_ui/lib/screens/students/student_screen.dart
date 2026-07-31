@@ -243,10 +243,10 @@ class _StudentsScreenState extends State<StudentsScreen> {
     }
   }
 
-  void _showAddEditStudentDialog({Map<String, dynamic>? student}) async {
+  void _showAddEditStudentDialog({Map<String, dynamic>? student, required bool isAdding}) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AddEditStudentDialog(student: student),
+      builder: (context) => AddEditStudentDialog(student: student, isAdding: isAdding),
     );
     if (result == true) {
       _refreshStudents();
@@ -354,7 +354,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                             Container(
                               height: 45,
                               child: ElevatedButton.icon(
-                                onPressed: () => _showAddEditStudentDialog(),
+                                onPressed: () => _showAddEditStudentDialog(isAdding: true),
                                 icon: Icon(FontAwesomeIcons.plus, size: 16),
                                 label: Text(
                                   'إضافة تلميذ',
@@ -519,7 +519,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                 size: 20,
               ),
               onPressed: () =>
-                  _showAddEditStudentDialog(student: student),
+                  _showAddEditStudentDialog(student: student, isAdding: false),
             ),
             IconButton(
               icon: const Icon(

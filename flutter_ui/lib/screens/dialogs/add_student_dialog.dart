@@ -6,8 +6,9 @@ import 'package:project_gp/core/services/auth_service.dart';
 
 class AddEditStudentDialog extends StatefulWidget {
   final Map<String, dynamic>? student;
+  final bool isAdding;
 
-  const AddEditStudentDialog({Key? key, this.student}) : super(key: key);
+  const AddEditStudentDialog({Key? key, this.student, required this.isAdding}) : super(key: key);
 
   @override
   _AddEditStudentDialogState createState() => _AddEditStudentDialogState();
@@ -16,10 +17,15 @@ class AddEditStudentDialog extends StatefulWidget {
 class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  // this variable is used to determine if we are adding a new student or editing an existing one
+  bool _isAdding = true;
 
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _hifdhController = TextEditingController();
+  //the only boolean field 
+
 
   // Role info
   final auth = AuthService();
@@ -49,8 +55,8 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
   void initState() {
     super.initState();
     _setupRoleLocks();
-    _populateFields();
     _loadInitialData();
+    _populateFields();
   }
 
   void _setupRoleLocks() {
@@ -80,7 +86,7 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
       _firstNameController.text = widget.student!['fname'] ?? '';
       _lastNameController.text = widget.student!['name'] ?? '';
       _phoneController.text = widget.student!['phone'] ?? '';
-      
+      _hifdhController.text = widget.student!['hifdh'] ?? '';
       _selectedGroupId = int.tryParse(widget.student!['group_id']?.toString() ?? '');
       // If we are editing, we ideally need to fetch the full hierarchy up. 
       // For simplicity, we assume we either have them in student data or we rely on role locks.
@@ -106,7 +112,7 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
       }
       
     } catch (e) {
-      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -186,7 +192,7 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedGroupId == null) {
+    if (_selectedGroupId == null && _isAdding) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please select a Group.')));
       return;
     }
@@ -197,6 +203,7 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
         'fname': _firstNameController.text.trim(),
         'name': _lastNameController.text.trim(),
         'phone': _phoneController.text.trim(),
+        'hifdh': _hifdhController.text.trim(),
         'group_id': _selectedGroupId,
       };
 
@@ -257,9 +264,15 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
                             SizedBox(height: 16),
                             Divider(),
                             SizedBox(height: 8),
-                            
+                            TextFormField(
+                              controller: _hifdhController,
+                              decoration: _inputDeco('Hifdh', FontAwesomeIcons.book),
+                              validator: (v) => v!.isEmpty ? 'Required' : null,
+                            ),
+                            SizedBox(height: 12),
+                         
                             // Wilaya
-                            if (!lockWilaya) ...[
+                            if (!lockWilaya && _isAdding) ...[
                               _buildDropdown(
                                 'Wilaya',
                                 _selectedWilayaId,
@@ -273,7 +286,7 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
                             ],
 
                             // Commune
-                            if (!lockCommune) ...[
+                            if (!lockCommune && _isAdding) ...[
                               _buildDropdown(
                                 'Baladiya',
                                 _selectedCommuneId,
@@ -287,7 +300,7 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
                             ],
 
                             // Class/School
-                            if (!lockClass) ...[
+                            if (!lockClass && _isAdding) ...[
                               _buildDropdown(
                                 'School Name',
                                 _selectedClassId,
@@ -301,7 +314,7 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
                             ],
 
                             // Group
-                             if (!lockGroup) ...[
+                             if (!lockGroup && _isAdding) ...[
                               _buildDropdown(
                                 'Student Group',
                                 _selectedGroupId,
@@ -315,7 +328,7 @@ class _AddEditStudentDialogState extends State<AddEditStudentDialog> {
                             ],
 
                             // Teacher
-                            if (!lockTeacher) ...[
+                            if (!lockTeacher && _isAdding) ...[
                               _buildDropdown(
                                 'Teacher',
                                 _selectedTeacherId,

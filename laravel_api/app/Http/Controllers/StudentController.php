@@ -78,10 +78,10 @@ public function index(Request $request, $groupId = null) {
     $students = $query->with('group.classes.commune.wilaya')->get();
 
     $students->map(function ($student) {
-        $student->group_name = $student->group->name ?? null;
-        $student->class_name = $student->group->classes->name ?? null;
-        $student->commune_name = $student->group->classes->commune->name ?? null;
-        $student->wilaya_name = $student->group->classes->commune->wilaya->name ?? null;
+        $student->group_name = $student->group->name ;
+        $student->class_name = $student->group->classes->name ;
+        $student->commune_name = $student->group->classes->commune->name ;
+        $student->wilaya_name = $student->group->classes->commune->wilaya->name ;
         return $student;
     });
 
@@ -94,13 +94,17 @@ public function store(Request $request)
     $validated = $request->validate([
         'name' => 'required|string|max:255',
         'fname' => 'required|string|max:255',
-        'group_id' => 'required|exists:groups,id', // if students belong to a group
+        'group_id' => 'required|exists:groups,id',
+        'hifdh' => 'sometimes|string|max:255',
+        "phone" => 'sometimes|string|max:20',
     ]);
 
     $student = new Student();
     $student->name = $validated['name'];
     $student->fname = $validated['fname'];
     $student->group_id = $validated['group_id'];
+    $student->hifdh = $validated['hifdh'] ;
+    $student->phone = $validated['phone'] ;
     $student->save();
 
     return response()->json($student, 201);
@@ -114,7 +118,7 @@ public function update(Request $request, $id)
         'group_id' => 'sometimes|exists:groups,id',
         'phone' => 'sometimes|string|max:20',
         'hifdh' => 'sometimes',
-        'payement_status' => 'sometimes',
+        'payement_status' => 'sometimes|boolean',
 
     ]);
 
