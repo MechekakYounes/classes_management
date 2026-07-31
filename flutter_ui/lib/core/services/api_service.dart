@@ -331,6 +331,21 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getGroupById(int groupId) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$_groupsUrl/$groupId'),
+            headers: currentAuthHeaders(),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleGroupResponse(response);
+    } catch (e) {
+      throw Exception('Failed to load group: $e');
+    }
+  }
+
   static Future<List<dynamic>> getGroupsByClass(dynamic classId) async {
     try {
       final stringId = classId.toString();

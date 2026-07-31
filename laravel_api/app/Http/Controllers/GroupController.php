@@ -82,4 +82,12 @@ class GroupController extends Controller
         $groups = Group::all();
         return response()->json(['data' => $groups]);
     }
+
+    // get a group by its ID (admin/global view)
+    public function getGroupById($groupId)
+    {
+        $group = Group::findOrFail($groupId);
+        return response()->json(['data' => $group]);
+    }
+
 }

@@ -86,6 +86,11 @@ class _StudentsScreenState extends State<StudentsScreen> {
     }
   }
 
+  Future<String> getGroupNamebyId(int groupId) async {
+    final group = await ApiService.getGroupById(groupId);
+    return group['name'] ?? 'N/A';
+  }
+
   void _filterStudents(String query) {
     if (query.isEmpty) {
       setState(() {
@@ -123,12 +128,13 @@ class _StudentsScreenState extends State<StudentsScreen> {
     });
   }
 
+
+
   void _showSortDialog() {
     showDialog(
       context: context,
       builder: (context) {
         String tempSortBy = _sortBy;
-
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -397,52 +403,123 @@ class _StudentsScreenState extends State<StudentsScreen> {
                                       style: TextStyle(color: Colors.grey)),
                                 )
                               : ListView.builder(
-                                  itemCount: filteredStudents.length,
-                                  itemBuilder: (context, index) {
-                                    final student = filteredStudents[index];
-                                    final studentName =
-                                        "${student['fname']} ${student['name']}";
-                                    return Card(
-                                      margin: EdgeInsets.only(bottom: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(16),
-                                      ),
-                                      elevation: 2,
-                                      child: ListTile(
-                                        leading: CircleAvatar(
-                                          backgroundColor: Colors.cyan.shade100,
-                                          child: Icon(FontAwesomeIcons.user,
-                                              color: Colors.cyan.shade800),
-                                        ),
-                                        title: Text(studentName,
-                                            style: GoogleFonts.poppins(
-                                                fontWeight: FontWeight.bold)),
-                                        subtitle: Text(
-                                            "Group: ${student['group_name'] ?? 'N/A'}\nSchool: ${student['class_name'] ?? 'N/A'}"),
-                                        isThreeLine: true,
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(FontAwesomeIcons.pen,
-                                                  color: Colors.blue, size: 20),
-                                              onPressed: () =>
-                                                  _showAddEditStudentDialog(
-                                                      student: student),
-                                            ),
-                                            IconButton(
-                                              icon: Icon(FontAwesomeIcons.trash,
-                                                  color: Colors.red, size: 20),
-                                              onPressed: () =>
-                                                  _deleteStudent(student['id']),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
+  itemCount: filteredStudents.length,
+  itemBuilder: (context, index) {
+    final student = filteredStudents[index];
+    final studentName = "${student['fname']} ${student['name']}";
+
+    final bool isPaid = student['payement_status'] == 1;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 10,
+        ),
+        leading: CircleAvatar(
+          radius: 24,
+          backgroundColor: Colors.cyan.shade100,
+          child: Icon(
+            FontAwesomeIcons.user,
+            color: Colors.cyan.shade800,
+            size: 18,
+          ),
+        ),
+        title: Text(
+          studentName,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Hifdh: ${student['hifdh'] ?? 'N/A'}",
+                style: GoogleFonts.poppins(),
+              ),
+              const SizedBox(height: 8),
+
+              // Payment Badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isPaid
+                      ? Colors.green.shade100
+                      : Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isPaid
+                        ? Colors.green
+                        : Colors.red,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isPaid
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                      color: isPaid
+                          ? Colors.green.shade700
+                          : Colors.red.shade700,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isPaid ? "PAID" : "UNPAID",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        color: isPaid
+                            ? Colors.green.shade800
+                            : Colors.red.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(
+                FontAwesomeIcons.pen,
+                color: Colors.blue,
+                size: 20,
+              ),
+              onPressed: () =>
+                  _showAddEditStudentDialog(student: student),
+            ),
+            IconButton(
+              icon: const Icon(
+                FontAwesomeIcons.trash,
+                color: Colors.red,
+                size: 20,
+              ),
+              onPressed: () =>
+                  _deleteStudent(student['id']),
+            ),
+          ],
+        ),
+      ),
+    );
+  },
+),
                         ),
                       ],
                     ),

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Commune;
 use App\Models\Classes;
 use App\Models\Group;
+use App\Models\Student;
 
 class AdminSeeder extends Seeder
 {
@@ -93,5 +94,22 @@ class AdminSeeder extends Seeder
             'class_id' => $school->id,
             'group_id' => $group->id,
         ])->assignRole('teacher');
+
+        Student::create([
+            'fname' => 'أحمد',
+            'name' => 'بن علي',
+            'payement_status' => False,
+            'phone' => '0555000006',
+            'hifdh' => true,
+            'group_id' => 1,
+        ]);
+        Student::create([
+            'fname' => 'محمد',
+            'name' => 'بن يوسف',
+            'payement_status' => True,
+            'phone' => '0555000007',
+            'hifdh' => false,
+            'group_id' => 1,
+        ]);
     }
 }
