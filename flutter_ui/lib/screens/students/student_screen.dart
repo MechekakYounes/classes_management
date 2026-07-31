@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project_gp/screens/dialogs/add_student_dialog.dart';
 import 'package:project_gp/screens/dialogs/student_filter_dialog.dart';
+import 'package:project_gp/screens/dialogs/edit_payement_status.dart';
 
 class StudentsScreen extends StatefulWidget {
   const StudentsScreen({Key? key}) : super(key: key);
@@ -491,6 +492,26 @@ class _StudentsScreenState extends State<StudentsScreen> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            IconButton(
+              icon: const Icon(
+                FontAwesomeIcons.moneyBill,
+                color: Colors.blueGrey,
+                size: 20,
+              ),
+              onPressed: () async {
+                final updated = await showDialog(
+                 context: context,
+                 builder: (_) => EditPaymentStatusDialog(
+                  student: student,
+                 ),
+                );
+
+                if (updated == true) {
+                _refreshStudents();
+                               }
+              },
+
+            ),
             IconButton(
               icon: const Icon(
                 FontAwesomeIcons.pen,

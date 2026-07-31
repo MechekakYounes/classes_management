@@ -41,9 +41,7 @@ public function index(Request $request, $groupId = null) {
         $query->where('group_id', $groupId);
     } else {
         // Scoping based on user role
-        if ($user->hasRole('super-admin')) {
-            // No additional scoping needed for super-admin
-        } elseif ($user->hasRole('admin')) {
+        if ($user->hasRole('admin')) {
             $query->whereHas('group.classes.commune', function ($q) use ($user) {
                 $q->where('wilaya_id', $user->wilaya_id);
             });
@@ -114,6 +112,10 @@ public function update(Request $request, $id)
         'name' => 'sometimes|string|max:255',
         'fname' => 'sometimes|string|max:255',
         'group_id' => 'sometimes|exists:groups,id',
+        'phone' => 'sometimes|string|max:20',
+        'hifdh' => 'sometimes',
+        'payement_status' => 'sometimes',
+
     ]);
 
     $student = Student::findOrFail($id);
