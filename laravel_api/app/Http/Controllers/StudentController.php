@@ -138,10 +138,6 @@ public function show($id)
 
 }
 
-public function show_all_students()
-{
-    $students = Student::all();
-    return response()->json($students);
-}
+
 
 }

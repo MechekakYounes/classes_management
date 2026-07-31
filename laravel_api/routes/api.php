@@ -90,12 +90,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware('permission:students.view')->group(function () {
         Route::get('/students/{groupId}', [StudentController::class, 'index']);
+        Route::get('/students', [StudentController::class, 'index']);
         Route::get('/students/show/{id}', [StudentController::class, 'show']);
         Route::get('/groups/{groupId}', [GroupController::class, 'getGroupById']);
-    });
-
-    Route::middleware('permission:students.view_all')->group(function () {
-        Route::get('/students', [StudentController::class, 'show_all_students']);
     });
 
     Route::middleware('permission:students.create')->group(function () {

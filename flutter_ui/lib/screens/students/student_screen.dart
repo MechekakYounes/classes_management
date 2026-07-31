@@ -86,11 +86,6 @@ class _StudentsScreenState extends State<StudentsScreen> {
     }
   }
 
-  Future<String> getGroupNamebyId(int groupId) async {
-    final group = await ApiService.getGroupById(groupId);
-    return group['name'] ?? 'N/A';
-  }
-
   void _filterStudents(String query) {
     if (query.isEmpty) {
       setState(() {
